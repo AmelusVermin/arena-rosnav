@@ -14,6 +14,7 @@ from task_generator.tasks import ABSTask
 import numpy as np
 import rospy
 from geometry_msgs.msg import Twist
+from std_msgs.msg import String
 from flatland_msgs.srv import StepWorld, StepWorldRequest
 from std_msgs.msg import Bool
 import time
@@ -84,9 +85,6 @@ class FlatlandEnv(gym.Env):
 
         self.setup_by_configuration(PATHS["robot_setting"], PATHS["robot_as"])
 
-        # set rosparam
-        rospy.set_param("/laser_num_beams", self._laser_num_beams)
-
         # observation collector
         self.observation_collector = ObservationCollector(
             self.ns, self._laser_num_beams, self._laser_max_range
@@ -137,6 +135,9 @@ class FlatlandEnv(gym.Env):
         self._safe_dist_counter = 0
         self._collisions = 0
         self._in_crash = False
+
+        # publisher for random map training
+        self.demand_map_pub = rospy.Publisher("/demand", String, queue_size=1)
 
     def setup_by_configuration(self, robot_yaml_path: str, settings_yaml_path: str):
         """get the configuration from the yaml file, including robot radius, discrete action space and continuous action space.
@@ -245,23 +246,23 @@ class FlatlandEnv(gym.Env):
             info["is_success"] = 0
 
         # for logging
-        if self._extended_eval:
-            if done:
-                info["collisions"] = self._collisions
-                info["distance_travelled"] = round(self._distance_travelled, 2)
-                info["time_safe_dist"] = (
-                    self._safe_dist_counter * self._action_frequency
-                )
-                info["time"] = self._steps_curr_episode * self._action_frequency
+        if self._extended_eval and done:
+            info["collisions"] = self._collisions
+            info["distance_travelled"] = round(self._distance_travelled, 2)
+            info["time_safe_dist"] = (
+                self._safe_dist_counter * self._action_frequency
+            )
+            info["time"] = self._steps_curr_episode * self._action_frequency
         return merged_obs, reward, done, info
 
     def reset(self):
-
+        self.demand_map_pub.publish("") # publisher to demand a map update
         # set task
         # regenerate start position end goal position of the robot and change the obstacles accordingly
         self.agent_action_pub.publish(Twist())
         if self._is_train_mode:
             self._sim_step_client()
+        time.sleep(0.1) # map_pub needs some time to update map            
         self.task.reset()
         self.reward_calculator.reset()
         self._steps_curr_episode = 0
