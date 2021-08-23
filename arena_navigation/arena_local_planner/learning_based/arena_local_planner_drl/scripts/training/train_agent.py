@@ -233,7 +233,7 @@ if __name__ == "__main__":
     params = initialize_hyperparameters(
         PATHS=PATHS, load_target=args.load, config_name=args.config, n_envs=args.n_envs
     )
-
+    
     # instantiate train environment
     # when debug run on one process only
     if not args.debug and ns_for_nodes:
