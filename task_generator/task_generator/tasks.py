@@ -161,10 +161,10 @@ class StagedRandomTask(RandomTask):
         rospy.set_param("/curr_stage", self._curr_stage)
 
         # hyperparamters.json location
-        self.json_file = os.path.join(
-            self._PATHS.get('model'), "hyperparameters.json")
-        assert os.path.isfile(self.json_file), "Found no 'hyperparameters.json' at %s" % self.json_file
-        self._lock_json = FileLock(self.json_file + ".lock")
+        #self.json_file = os.path.join(
+            #self._PATHS.get('model'), "hyperparameters.json")
+        #assert os.path.isfile(self.json_file), "Found no 'hyperparameters.json' at %s" % self.json_file
+        #self._lock_json = FileLock(self.json_file + ".lock")
 
         # subs for triggers
         self._sub_next = rospy.Subscriber(f"{self.ns_prefix}next_stage", Bool, self.next_stage)
