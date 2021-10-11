@@ -2,7 +2,7 @@ import numpy as np
 from nav_msgs.msg import Odometry
 import nav_msgs
 from geometry_msgs.msg import PoseStamped
-from mid_planners.mid_planner import MidPlanner
+from .mid_planner import MidPlanner
 
 class Dummy(MidPlanner):
 
@@ -15,5 +15,5 @@ class Dummy(MidPlanner):
 
     def get_subgoal(self, global_plan, odom):
         subgoal = PoseStamped()
-        subgoal = global_plan.poses[0]
+        subgoal = global_plan.poses[-1]
         return subgoal

@@ -1,0 +1,76 @@
+# important note when adding params! unique key names across all nested params are assumed. 
+# This file gets flattened during parsing without adding prefixes to the key names
+robot:
+  ## settings related to the robot itself
+  robot: "myrobot"
+  continuous_actions:
+    linear_range: [0, 0.3]
+    angular_range: [-2.7, 2.7]
+environment:
+  ## settings related to the gym environment
+  max_distance_goal: 100
+  global_planner_class: "global_planners.dummy_global.Dummy"
+  mid_planner_class: "mid_planners.dummy_mid.Dummy"
+  local_planner_class: "local_planners.dummy_local.Dummy"
+  goal_radius: 0.25
+  reward_fnc: "rule_02"
+  task_mode: "random"
+  safe_dist: null
+  extended_eval: True
+  max_steps_per_episode: 100
+training:
+  ## settings related to training and model
+  #sub directory of this package
+  train_log_dir: "logs/training_logs"
+  tensorboard_log_dir: "logs/tensorboard"
+  ## learning related settings
+  batch_size: 2048
+  gamma: 0.99 
+  ent_coef: 0.005 
+  learning_rate: 0.0003
+  vf_coef: 0.22
+  max_grad_norm: 0.5
+  gae_lambda: 0.95
+  mini_batch_size: 16
+  n_epochs: 3
+  clip_range: 0.22
+  train_max_steps_per_episode: 500
+  eval_max_steps_per_episode: 650
+  normalize: True
+  total_timesteps: 40000000
+  train_verbose: 1
+model:
+  ## model related settings. Used in model_builder.py
+  # boolean: true if an existing model shall be loaded. 
+  # model_path and update_params need to be set if true
+  load_model: false
+  # string: path to zip file containing a model
+  model_path: ""
+  # boolean: true if the saved model params shall be overwritten by the current config values or not
+  # paths are definitly overwritten as they might not exist anymore
+  overwrite_params: true
+  # string: agent_type that shall be created like CUSTOM_MLP, or AGENT_6, use command line option --show_registered_types or -srt
+  # is ignored if model_path is true
+  agent_type: "AGENT_8"
+  # string: path to yaml file that contains additional agent_type dependent params (currently only necessary for CUSTOM_MLP)
+  model_config_path: "configs/custom_mlp_settings.yaml"
+trainstage:
+  ## settings related to creating TrainStage callback
+  # type can be either 'succ' or 'rew'
+  stage_threshold_type: "succ"
+  stage_upper_thres: 0.85
+  stage_lower_thres: 0.6
+  stage_verbose: 1
+evaluation:
+  ## settings related to creating evaluation callback
+  model_save_dir: "models/trained/"
+  # n_eval_episodes: number of episodes to evaluate agent on
+  n_eval_episodes: 40
+  # eval_freq: evaluate the agent every eval_freq train timesteps
+  eval_freq: 20000
+  deterministic: True
+stoptraining:
+  ## settings related to creating stop training callback
+  stop_threshhold_type: "succ"
+  stop_reward_threshhold: 0.9
+  stop_verbose: 1

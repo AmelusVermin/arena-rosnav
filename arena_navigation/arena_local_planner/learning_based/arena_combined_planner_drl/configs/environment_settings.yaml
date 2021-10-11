@@ -1,9 +1,0 @@
-robot:
-  continuous_actions:
-    linear_range: [0, 0.3]
-    angular_range: [-2.7, 2.7]
-environment:
-  max_distance_goal: 100
-  global_planner_class: "global_planners.dummy_global.Dummy"
-  mid_planner_class: "mid_planners.dummy_mid.Dummy"
-  local_planner_class: "local_planners.dummy_local.Dummy"
