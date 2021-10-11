@@ -82,7 +82,7 @@ class FlatlandEnv(gym.Env):
         self._extended_eval = extended_eval
         self._is_train_mode = rospy.get_param("/train_mode")
         self._is_action_space_discrete = is_action_space_discrete
-
+        
         self.setup_by_configuration(PATHS["robot_setting"], PATHS["robot_as"])
 
         # observation collector

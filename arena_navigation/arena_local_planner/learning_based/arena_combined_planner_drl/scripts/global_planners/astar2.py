@@ -5,7 +5,7 @@ import os
 import subprocess
 import rosservice
 from geometry_msgs.msg import Pose, PoseStamped
-from global_planners.global_planner import GlobalPlanner
+from .global_planner import GlobalPlanner
 from global_planner_interface.srv import MakeNewPlan
 
 class AStar2(GlobalPlanner):
