@@ -13,7 +13,7 @@
 
   <!-- To make the training more efficient make sure this step_size*laser_update_rate == 1  -->
   <arg name="step_size" default="0.01"/>
-  <arg name="update_rate" default="250"/>
+  <arg name="update_rate" default="500"/>
   <arg name="show_viz"  default="true"/>
   <arg name="viz_pub_rate" default="30" />
   <arg name="use_rviz" default="true"/>
@@ -82,8 +82,8 @@
    <arg name="timeout"              value="$(arg timeout)"/>
   </include>
 
-  <include file="$(find arena_bringup)/launch/sublaunch_testing/sensor_sim.launch" unless="$(eval arg('disable_scenario') or arg('train_mode'))">
-  </include>
+  <!-- <include file="$(find arena_bringup)/launch/sublaunch_testing/sensor_sim.launch" unless="$(eval arg('disable_scenario') or arg('train_mode'))">
+  </include> -->
 
   
 
@@ -109,7 +109,7 @@
   </include>
   <include file="$(find arena_bringup)/launch/sublaunch_testing/intermediate_planner.launch">
 
-  </include> -->
+  </include> 
 
 
 
