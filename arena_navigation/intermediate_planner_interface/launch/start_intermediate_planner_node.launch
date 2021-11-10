@@ -1,0 +1,20 @@
+<launch>
+    <!-- Arguments -->
+    <arg name="ns" default=""/>
+    <arg name="node_name" default="intermediate_planner_interface"/>
+    
+    <!-- case if namespace is empty -->
+    <group if="$(eval arg('ns') == '')">
+        <node pkg="intermediate_planner_interface" type="IntermediatePlannerInterface" respawn="false"
+          name="$(arg node_name)" output="screen">
+        </node>
+    </group>
+
+    <!-- case if namespace is not empty -->
+    <group if="$(eval arg('ns') != '')">
+        <node pkg="intermediate_planner_interface" type="IntermediatePlannerInterface" respawn="false"
+          name="$(arg node_name)" output="screen" ns="$(arg ns)">
+        </node>
+    </group>
+</launch>
+

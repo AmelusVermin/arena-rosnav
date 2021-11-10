@@ -12,6 +12,7 @@ class RewardCalculator:
         robot_radius: float,
         safe_dist: float,
         goal_radius: float,
+        collision_tolerance: float,
         rule: str = "rule_00",
         extended_eval: bool = False,
     ):
@@ -32,6 +33,7 @@ class RewardCalculator:
         self.last_dist_to_path = None
         self.last_action = None
         self.safe_dist = safe_dist
+        self.collision_tolerance = collision_tolerance
         self._extended_eval = extended_eval
 
         self.kdtree = None
@@ -228,14 +230,15 @@ class RewardCalculator:
         :param laser_scan (np.ndarray): laser scan data
         :param punishment (float, optional): punishment for collision. defaults to 10
         """
-        if laser_scan.min() <= self.robot_radius:
+        #print(f"!!!{laser_scan.min()}, {self.robot_radius}, {self.collision_tolerance}")
+        if laser_scan.min() <= self.robot_radius + self.collision_tolerance:
             self.curr_reward -= punishment
-
-            if not self._extended_eval:
-                self.info["is_done"] = True
-                self.info["done_reason"] = 1
-                self.info["is_success"] = 0
-            else:
+        
+            self.info["is_done"] = True
+            self.info["done_reason"] = 1
+            self.info["is_success"] = 0
+            
+            if self._extended_eval: 
                 self.info["crash"] = True
 
     def _reward_safe_dist(self, laser_scan: np.ndarray, punishment: float = 0.15):

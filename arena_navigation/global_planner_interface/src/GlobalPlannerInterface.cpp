@@ -3,6 +3,11 @@
 //
 
 #include "../include/global_planner_interface/GlobalPlannerInterface.h"
+#include <string.h>
+#include <iostream>
+#include <fstream>
+
+using namespace std;
 
 GlobalPlannerInterface::GlobalPlannerInterface() : bgp_loader_("nav_core", "nav_core::BaseGlobalPlanner"),
                                                    tfBuffer(ros::Duration(10)),
@@ -10,20 +15,14 @@ GlobalPlannerInterface::GlobalPlannerInterface() : bgp_loader_("nav_core", "nav_
     
     // create   ROS handle
     ros::NodeHandle nh("~");
-    ROS_INFO("Constructor");
     // create Costmap
     _costmap_ros = new costmap_2d::Costmap2DROS("global_costmap", tfBuffer);
-    ROS_INFO("Constructor2");
     _costmap_ros->start();
-    ROS_INFO("Constructor3");
     _time_last_resetted = ros::Time::now();
-
-    ROS_INFO("Started global costmap!");
 
     nh.param("global_planner_type", _global_planner_type, _global_planner_type);
     nh.param("reset_costmap_automatically", _reset_costmap_automatically, _reset_costmap_automatically);
     nh.param("reset_costmap_interval", _reset_costmap_interval, _reset_costmap_interval);
-    ROS_INFO("try");
     try {
         _global_planner = bgp_loader_.createInstance(_global_planner_type);
         _global_planner->initialize(bgp_loader_.getName(_global_planner_type), _costmap_ros);
@@ -31,7 +30,6 @@ GlobalPlannerInterface::GlobalPlannerInterface() : bgp_loader_("nav_core", "nav_
         ROS_FATAL_STREAM("Failed to create global planner " << _global_planner_type << "!");
         exit(1);
     }
-    ROS_INFO("init services");
     // create services
     _getGlobalPlan = nh.advertiseService("makeGlobalPlan", &GlobalPlannerInterface::makeNewPlanCallback, this);
 
@@ -43,17 +41,22 @@ bool GlobalPlannerInterface::makeNewPlanCallback(global_planner_interface::MakeG
     geometry_msgs::PoseStamped robot_pose;
     _costmap_ros->getRobotPose(robot_pose);
 
-    std::vector<geometry_msgs::PoseStamped> global_plan;
+    vector<geometry_msgs::PoseStamped> global_plan;
     if (!_global_planner->makePlan(robot_pose, req.goal, global_plan) || global_plan.empty()) {
+        cout << global_plan.size() << endl;
         reset_costmap();
         if (!_global_planner->makePlan(robot_pose, req.goal, global_plan) || global_plan.empty()) {
             ROS_WARN("Couldn't find global plan!");
             rep.global_plan.poses = {robot_pose, req.goal};
+            // call automatic reset and return early to avoid overwriting the response with empty plan
+            automatic_reset();
+            return true;
         }
     }
 
     automatic_reset();
 
+    
     rep.global_plan.poses.resize(global_plan.size());
     for (unsigned int i = 0; i < global_plan.size(); ++i) {
         rep.global_plan.poses[i] = global_plan[i];
@@ -86,10 +89,9 @@ void GlobalPlannerInterface::automatic_reset() {
 
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "global_planner");
-    ROS_INFO("start");
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
     auto *local_planner_node = new GlobalPlannerInterface();
-
+    ROS_INFO("Started global planner interface.");
     ros::spin();
 
     return 0;

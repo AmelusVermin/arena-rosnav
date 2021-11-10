@@ -39,10 +39,8 @@ class ModelBuilder:
             if args.agent_type in AGENT_CASES["CustomMLPPPO"]:
                 # model_params should contain body, pi, vf, act_fn for this case
                 attributes = ["body", "pi", "vf", "act_fn"]
-                assert(
-                    all(hasattr(model_params, att) for att in attributes), 
-                    f"one of the following attributes are missing in the config file {args.model_config_path}: {attributes}"
-                )
+                assert all(hasattr(model_params, att) for att in attributes), f"one of the following attributes are missing in the config file {args.model_config_path}: {attributes}"
+                
                 # get network architecture
                 net_arch = get_net_arch(model_params)
                 model = PPO(
@@ -103,15 +101,17 @@ class ModelBuilder:
                     )
             else :
                 raise NameError(f"Agent type {args.agent_type} is not specified for building!")
+            print("build new model")
         else:
             # load model from zip file if it exists
             if os.path.isfile(args.model_path):
                 model = PPO.load(os.path.join(args.model_path), env)
                 # the paths need to updated as set one might not exist
                 model.tensorboard_log = save_paths["tensorboard"]
+                print(f"loaded model: {args.model_path}")
                 # overwrite params if wished
                 if args.overwrite_params:
-                    ModelBuilder.overwrite_model_hyperparams(model, args, save_paths, args.n_envs)
+                    ModelBuilder.overwrite_model_hyperparams(model, args)
             else:
                 raise FileNotFoundError(f"{args.model_path} is not a file!")
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(arena_plan_manager)
+project(intermediate_planner_interface)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -9,19 +9,12 @@ project(arena_plan_manager)
 ## is used, also find other catkin packages
 find_package(Eigen3 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
-  nav_msgs
   roscpp
-  rospy
-  sensor_msgs
   std_msgs
-  tf2
-  tf2_geometry_msgs
-  tf2_ros
-
-  plan_visualization
-  arena_plan_msgs
-  arena_fake_localization
+  message_generation
+  nav_msgs
+  geometry_msgs
+  arena_plan_manager
 )
 
 ## System dependencies are found with CMake's conventions
@@ -65,11 +58,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  MakeIntermediateGoal.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -79,10 +71,12 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   geometry_msgs#   nav_msgs#   sensor_msgs#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs  # Or other packages containing msgs
+  nav_msgs
+  geometry_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -115,9 +109,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES arena_plan_manager
-  CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy sensor_msgs std_msgs arena_plan_msgs plan_visualization
-  DEPENDS Eigen3
+  LIBRARIES intermediate_planner_interface
+#  CATKIN_DEPENDS roscpp std_msg
+#  DEPENDS system_lib
+  CATKIN_DEPENDS message_runtime arena_plan_manager
 )
 
 ###########
@@ -128,38 +123,27 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  #include/${PROJECT_NAME}
   ${catkin_INCLUDE_DIRS}
-  SYSTEM
   ${EIGEN3_INCLUDE_DIR}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/arena_plan_manager.cpp
+#   src/${PROJECT_NAME}/intermediate_planner_interface.cpp
 # )
-
+# add_library(IntermediatePlannerInterface src/IntermediatePlannerInterface.cpp
+# )
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-#add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#add_dependencies(intermediate_planner_interface ${PROJECT_NAME}_generate_messages_cpp)
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-
-add_executable(plan_manager_node
-    src/plan_manager_node.cpp 
-    src/plan_manager.cpp 
-    src/plan_collector.cpp
-  )
-
-  add_executable(test_node
-    src/test_node.cpp 
-
-  )
-
-
+# add_executable(${PROJECT_NAME}_node src/intermediate_planner_interface_node.cpp)
+add_executable(IntermediatePlannerInterface src/IntermediatePlannerInterface.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -169,22 +153,15 @@ add_executable(plan_manager_node
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-
-add_dependencies(plan_manager_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(test_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(IntermediatePlannerInterface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-add_library(arena_plan_manager src/plan_collector.cpp src/plan_manager.cpp)
+# target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+# )
 
-target_link_libraries(arena_plan_manager ${catkin_LIBRARIES})
-
-target_link_libraries(plan_manager_node
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(test_node
-  ${catkin_LIBRARIES}
-)
+target_link_libraries(IntermediatePlannerInterface ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -208,18 +185,38 @@ target_link_libraries(test_node
 
 ## Mark libraries for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
+# install(TARGETS ${PROJECT_NAME}
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+# )
 
+# install(TARGETS intermediate_planner_interface
+#         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#         )
+
+# install(TARGETS IntermediatePlannerInterface
+#         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#         )
+
+# ## Mark cpp header files for installation
+# install(DIRECTORY include/${PROJECT_NAME}/
+#         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#         #FILES_MATCHING PATTERN "*.h"
+#         PATTERN ".svn" EXCLUDE
+#         )
+
+# Mark other files for installation (e.g. launch and bag files, etc.)
+#install(FILES
+#        start_global_planner_node.launch
+#        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+#       )
 ## Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
-)
+# install(DIRECTORY include/${PROJECT_NAME}/
+#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#   FILES_MATCHING PATTERN "*.h"
+#   PATTERN ".svn" EXCLUDE
+# )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
@@ -233,7 +230,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_plan_manage.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_intermediate_planner_interface.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

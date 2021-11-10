@@ -34,11 +34,11 @@ class Observer():
 
         # define observation variables
         self._num_lidar_beams = args.num_lidar_beams
-        self._last_scan = LaserScan()
+        self._last_scan = None#LaserScan()
         self._scan_deque = deque(maxlen=args.max_deque_size)
-        self._last_odom = Odometry()
+        self._last_odom = None#Odometry()
         self._odom_deque = deque(maxlen=args.max_deque_size)
-        self._last_goal = PoseStamped()
+        self._last_goal = None#PoseStamped()
         
         # syncronization params
         self._sync_slop = args.sync_slop
@@ -91,6 +91,12 @@ class Observer():
         if synced_scan is not None and synced_odom is not None:
             self._last_scan = synced_scan
             self._last_odom = synced_odom
+        # not all observations were set at least once in the current episode
+        if self._last_odom is None or self._last_scan is None or self._last_goal is None:
+            rospy.logdebug(f"odom: {self._last_odom}")
+            rospy.logdebug(f"goal: {self._last_goal}")
+            rospy.logdebug(f"scan: {self._last_scan}")
+            return None
         # process messages
         scan = self.process_scan_msg(self._last_scan)
         robot_pose2D, twist = self.process_robot_state_msg(self._last_odom)
@@ -175,6 +181,17 @@ class Observer():
         """ Clears both deques for synchronization. """
         self._scan_deque.clear()
         self._odom_deque.clear()
+    
+    def reset_last_obs(self):
+        """ resets the member variables that contain last observations """
+        self._last_goal = None
+        self._last_odom = None
+        self._last_scan = None
+
+    def reset(self):
+        """ resets observer for new episode """
+        self.reset_deques()
+        self.reset_last_obs()
 
     @staticmethod
     def process_global_plan_msg(globalplan):

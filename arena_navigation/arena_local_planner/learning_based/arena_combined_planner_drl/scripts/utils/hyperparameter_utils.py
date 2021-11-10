@@ -79,45 +79,42 @@ hyperparams = {
     ]
 }
 
-
-def initialize_hyperparameters(
-    PATHS: dict, load_target: str, config_name: str = "default", n_envs: int = 1
-) -> dict:
-    """
-    Write hyperparameters to json file in case agent is new otherwise load existing hyperparameters
-
-    :param PATHS: dictionary containing model specific paths
-    :param load_target: unique agent name (when calling --load)
-    :param config_name: name of the hyperparameter file in /configs/hyperparameters
-    :param n_envs: number of envs
-    """
-    # when building new agent
-    if load_target is None:
-        hyperparams = load_hyperparameters_json(
-            PATHS=PATHS, from_scratch=True, config_name=config_name
-        )
-        hyperparams["agent_name"] = PATHS["model"].split("/")[-1]
-    else:
-        hyperparams = load_hyperparameters_json(PATHS=PATHS)
-
-    # dynamically adapt n_steps according to batch size and n envs
-    # then update .json
-    check_batch_size(n_envs, hyperparams["batch_size"], hyperparams["m_batch_size"])
-    hyperparams["n_steps"] = int(hyperparams["batch_size"] / n_envs)
-    write_hyperparameters_json(hyperparams, PATHS)
-    print_hyperparameters(hyperparams)
-    return hyperparams
+def _fill_dict(args: argparse.Namespace):
+    params = dict()
+    params["agent_name"] = args.agent_name
+    params["robot"] = args.robot
+    params["batch_size"] = args.batch_size
+    params["gamma"] = args.gamma
+    params["n_steps"] = args.n_steps
+    params["ent_coef"] = args.ent_coef
+    params["learning_rate"] = args.learning_rate
+    params["vf_coef"] = args.vf_coef
+    params["max_grad_norm"] = args.max_grad_norm
+    params["gae_lambda"] = args.gae_lambda
+    params["m_batch_size"] = args.mini_batch_size
+    params["n_epochs"] = args.n_epochs
+    params["clip_range"] = args.clip_range
+    params["reward_fnc"] = args.reward_fnc
+    params["discret_actions_space"] = False
+    params["normalize"] = args.normalize
+    params["task_mode"] = args.task_mode
+    params["curr_stage"] = args.task_curr_stage
+    params["train_max_steps_per_episode"] = args.train_max_steps_per_episode
+    params["eval_max_steps_per_episode"] = args.eval_max_steps_per_episode
+    params["goal_radius"] = args.goal_radius
+    return params
 
 
-def write_hyperparameters_json(hyperparams: dict, PATHS: dict) -> None:
+def write_hyperparameters_json(args: argparse.Namespace, save_paths: dict) -> None:
     """
     Write hyperparameters.json to agent directory
 
     :param hyperparams: dict containing model specific hyperparameters
     :param PATHS: dictionary containing model specific paths
     """
-    doc_location = os.path.join(PATHS.get("model"), "hyperparameters.json")
+    doc_location = os.path.join(save_paths.get("model"), "hyperparameters.json")
 
+    hyperparams = _fill_dict(args)
     with open(doc_location, "w", encoding="utf-8") as target:
         json.dump(hyperparams, target, ensure_ascii=False, indent=4)
 

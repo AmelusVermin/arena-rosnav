@@ -15,7 +15,11 @@ void PlanCollector::initPlanModules(ros::NodeHandle &nh){
     std::string fullName = ns + "/"+global_plan_service_name;
     ros::service::waitForService(fullName);   
     global_plan_client_= nh.serviceClient<nav_msgs::GetPlan>(global_plan_service_name);
+    
+    initSubgoalModule(nh);
+}
 
+void PlanCollector::initSubgoalModule(ros::NodeHandle &nh){
     // get plan parameter
     nh.param("/look_ahead_distance", look_ahead_distance_, 1.5);
     nh.param("/tolerance_approach", tolerance_approach_, 0.5);  

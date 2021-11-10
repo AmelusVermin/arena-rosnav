@@ -3,27 +3,56 @@
     <arg name="ns" default="sim_1"/>
     <arg name="config_path" default="/home/marvin/catkin_ws/src/arena-rosnav/arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/configs/global_planner.yaml"/>
 
-    <arg name="node_name" default="global_planner_interface"/>
+    <arg name="node_name" default="ROS_global_planner"/>
     <arg name="global_frame" default="map"/>
-    <arg name="robot_frame" default="$(arg ns)_odom"/>
-    <arg name="base_footprint" default="$(arg ns)_base_footprint"/>
-    <arg name="scan_frame" default="$(arg ns)_laser_link"/>
+    
 
-    <node pkg="global_planner_interface" type="GlobalPlannerInterface" respawn="false"
+    <!-- case if namespace is empty -->
+    <group if="$(eval arg('ns') == '')">
+        <arg name="robot_frame" default="odom"/>
+        <arg name="base_footprint" default="base_footprint"/>
+        <arg name="scan_frame" default="laser_link"/>
+        <node pkg="global_planner_interface" type="GlobalPlannerInterface" respawn="false"
+          name="$(arg node_name)" output="screen">
+            <!-- load params -->
+            <rosparam file="$(arg config_path)" command="load"/>
+
+            <!-- Set namespace specific parameters -->
+            <!-- global costmap params -->
+            <param name="global_costmap/global_frame" value="$(arg global_frame)"/>
+            <param name="global_costmap/robot_base_frame" value="$(arg base_footprint)"/>
+
+            <param name="global_costmap/scan/sensor_frame" value="$(arg scan_frame)"/>
+
+        </node>
+    </group>
+
+    <!-- case if namespace is not empty -->
+    <group if="$(eval arg('ns') != '')">
+        <arg name="robot_frame" default="$(arg ns)_odom"/>
+        <arg name="base_footprint" default="$(arg ns)_base_footprint"/>
+        <arg name="scan_frame" default="$(arg ns)_laser_link"/>
+        <node pkg="global_planner_interface" type="GlobalPlannerInterface" respawn="false"
           name="$(arg node_name)" output="screen" ns="$(arg ns)">
-        <!-- load params -->
-        <rosparam file="$(arg config_path)" command="load"/>
+            <!-- load params -->
+            <rosparam file="$(arg config_path)" command="load"/>
 
-        <!-- Set namespace specific parameters -->
-        <!-- global costmap params -->
-        <param name="global_costmap/global_frame" value="$(arg global_frame)"/>
-        <param name="global_costmap/robot_base_frame" value="$(arg base_footprint)"/>
+            <!-- Set namespace specific parameters -->
+            <!-- global costmap params -->
+            <param name="global_costmap/global_frame" value="$(arg global_frame)"/>
+            <param name="global_costmap/robot_base_frame" value="$(arg base_footprint)"/>
 
-        <param name="global_costmap/scan/sensor_frame" value="$(arg scan_frame)"/>
+            <param name="global_costmap/scan/sensor_frame" value="$(arg scan_frame)"/>
 
-        <!-- remaps due to namespace -->
-        <remap from="/clock" to="/$(arg ns)/clock"/>
-        <remap from="map" to="/$(arg ns)/map"/>
+            <!-- remaps due to namespace -->
+            <remap from="/clock" to="/sim_1/clock"/>
+            <remap from="map" to="/map"/>
 
-    </node>
+        </node>
+    </group>
+
+
+    
+
+
 </launch>

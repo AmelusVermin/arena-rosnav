@@ -4,14 +4,15 @@ import nav_msgs
 from geometry_msgs.msg import PoseStamped
 from .mid_planner import MidPlanner
 
+NAME = "dummy mid planner"
 class Dummy(MidPlanner):
 
-    def __init__(self):
-        super().__init__()
-        self.name = "dummy mid planner"
-        
-    def get_name(self) -> str:
-        return self.name
+    def __init__(self, ns):
+        super().__init__(ns)
+    
+    @staticmethod
+    def get_name() -> str:
+        return NAME
 
     def get_subgoal(self, global_plan, odom):
         subgoal = PoseStamped()

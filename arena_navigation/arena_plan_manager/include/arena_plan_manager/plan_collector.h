@@ -47,7 +47,7 @@ public:
     PlanCollector();
     ~PlanCollector();
     void initPlanModules(ros::NodeHandle& nh);
-    
+    void initSubgoalModule(ros::NodeHandle& nh);
 
     bool generate_global_plan(RobotState &start_state,RobotState &end_state);
 

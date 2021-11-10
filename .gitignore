@@ -53,3 +53,7 @@ __pycache__
 .vscode/
 .env
 **/.vscode
+
+#training directories
+arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/logs/
+arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/models/trained/

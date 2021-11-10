@@ -1,0 +1,6 @@
+# request fields
+nav_msgs/Path global_plan
+nav_msgs/Odometry robot_pos
+---
+# response fields
+geometry_msgs/PoseStamped subgoal

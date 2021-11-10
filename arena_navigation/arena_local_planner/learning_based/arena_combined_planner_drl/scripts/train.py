@@ -7,6 +7,7 @@ import time
 import torch as th
 import os
 import rospkg
+import sys
 import subprocess
 from typing import Type, Union
 from pydoc import locate
@@ -28,6 +29,7 @@ from model.agent_factory import AgentFactory
 from model.custom_policy import *
 from model.simple_lstm_policy import *
 from model.custom_sb3_policy import *
+from utils.hyperparameter_utils import write_hyperparameters_json
 
 def print_registered_types():
     all_types = AgentFactory.get_all_registered_agents()
@@ -61,10 +63,12 @@ def main():
     rospy.set_param("/enable_statistics", "true")
     rospy.set_param("/statistics_window_max_elements", 100)
     rospy.set_param("/statistics_window_min_elements", 10)
-    if args.debug:
-        rospy.init_node('trainer', log_level=args.log_level)
+    rospy.set_param("/statistics_window_min_size", 4)
+    rospy.set_param("/statistics_window_max_size", 10)
+
     # debug output of parsed arguments
-    rospy.logdebug(f"parsed arguments: {args}")
+    if args.debug:
+        print(f"parsed arguments: {args}")
 
     #PATHS = get_paths("a1", args)
     # for training with start_arena_flatland.launch
@@ -79,7 +83,7 @@ def main():
             # when starting flatland in training mode the number of envs was given, or the single_env as a param exist
             args.n_envs = 1 if not ns_for_nodes else rospy.get_param("num_envs")
         except KeyError:
-            rospy.logwarn("No environment number is given in ros! It is set to 1.")
+            print("No environment number is given in ros! It is set to 1!")
             args.n_envs = 1
     
     check_params(args)
@@ -88,12 +92,22 @@ def main():
     # wait for nodes to start
     wait_for_nodes(with_ns=ns_for_nodes, n_envs=args.n_envs, timeout=5)
 
-    # instantiate global and mid planner
-    global_planner = locate(args.global_planner_class)()
-    mid_planner = locate(args.mid_planner_class)()
-    rospy.loginfo(f"used global planner: {global_planner.get_name()}")
-    rospy.loginfo(f"used mid planner: {mid_planner.get_name()}")    
+    # get classes of global and mid planner
+    global_planner = locate(args.global_planner_class)
+    mid_planner = locate(args.mid_planner_class)
+    print(f"used global planner: {global_planner.get_name()}")
+    print(f"used mid planner: {mid_planner.get_name()}")    
     
+    # save configs to save dir
+    copy_file(settings_file, save_paths['model'])
+    copy_file(args.model_config_path, save_paths['model'])
+    curriculum_file_name = save_paths['curriculum'].split("/")[-1]
+    copy_file(save_paths['curriculum'], os.path.join(save_paths['model'], curriculum_file_name))
+    # for compatability issues the hyperparameters.json is neccessary (the task_generator uses it)
+    write_hyperparameters_json(args, save_paths)
+    model_path = save_paths["model"]
+    print(f"saving model data to: {model_path}")
+
     # instantiate train environment
     # when debug run on one process only
     if not args.debug and ns_for_nodes:
@@ -151,17 +165,15 @@ def main():
         callback_on_new_best=stoptraining_cb,
     )
 
-    
-
     # get model, either build new one or load a specified one
     model = ModelBuilder.get_model(args, model_params, save_paths, env)
-    
-    # save configs to save dir
-    copy_file(settings_file, save_paths['model'])
-    copy_file(args.model_config_path, save_paths['model'])
-    curriculum_file_name = save_paths['curriculum'].split("/")[-1]
-    copy_file(save_paths['curriculum'], os.path.join(save_paths['model'], curriculum_file_name))
-    
+ 
+    command = ['tensorboard', f"--logdir={save_paths['tensorboard']}"]
+   
+    # start service
+    tensorboard_process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)       
+
+    # track training time
     start = time.time() 
     try:
         model.learn(
@@ -171,9 +183,10 @@ def main():
         print("KeyboardInterrupt..")
 
     model.env.close()
+    tensorboard_process.kill()
     print(f"Time passed: {time.time()-start}s")
     print("Training script will be terminated")
-    exit()
+    sys.exit()
 
 if __name__ == '__main__':
     main()

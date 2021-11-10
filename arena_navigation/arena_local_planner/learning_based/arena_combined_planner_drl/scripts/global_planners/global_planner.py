@@ -4,11 +4,12 @@ from abc import ABC, abstractmethod
 
 class GlobalPlanner(ABC):
 
-    def __init__(self):
-        pass
-
+    def __init__(self, ns):
+        self.ns = ns
+    
+    @staticmethod
     @abstractmethod
-    def get_name(self) -> str:
+    def get_name() -> str:
         pass
 
     @abstractmethod

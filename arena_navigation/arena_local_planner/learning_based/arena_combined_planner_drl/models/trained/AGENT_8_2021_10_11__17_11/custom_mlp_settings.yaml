@@ -1,5 +1,0 @@
-body: "64-64"
-pi: "32-32"
-vf: "32-32"
-# can be "relu", "sigmoid" or "tanh"
-act_fn: "relu"
