@@ -31,6 +31,7 @@ from model.simple_lstm_policy import *
 from model.custom_sb3_policy import *
 from utils.hyperparameter_utils import write_hyperparameters_json
 
+
 def print_registered_types():
     all_types = AgentFactory.get_all_registered_agents()
     print("The following agent types are available:")
@@ -70,6 +71,7 @@ def main():
     if args.debug:
         print(f"parsed arguments: {args}")
 
+
     #PATHS = get_paths("a1", args)
     # for training with start_arena_flatland.launch
     ros_params = rospy.get_param_names()
@@ -84,6 +86,7 @@ def main():
             args.n_envs = 1 if not ns_for_nodes else rospy.get_param("num_envs")
         except KeyError:
             print("No environment number is given in ros! It is set to 1!")
+
             args.n_envs = 1
     
     check_params(args)

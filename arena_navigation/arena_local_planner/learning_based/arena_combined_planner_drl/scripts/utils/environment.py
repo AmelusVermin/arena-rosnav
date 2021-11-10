@@ -63,7 +63,6 @@ class FlatlandEnv(gym.Env):
             high=np.array([args.linear_range[1], args.angular_range[1]]),
             dtype=np.float,
         )
-
         # define publisher
         self._agent_action_pub = rospy.Publisher(f"{self.ns_prefix}cmd_vel", Twist, queue_size=1)
         self._global_planner_pub = rospy.Publisher(f"{self.ns_prefix}globalPlan", nav_msgs.msg.Path, queue_size=1)
