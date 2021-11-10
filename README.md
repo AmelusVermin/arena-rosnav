@@ -27,7 +27,8 @@ We recommend starting with the [start guide](https://github.com/ignc-research/ar
 
 
 ## 1. Installation
-Please refer to [Installation.md](docs/Installation.md) for detailed explanations about the installation process.
+Please refer to [Installation.md](docs/Installation.md) for detailed explanations about the installation process.  
+  If you want to use Docker, please refer to our [Dockerfile](Docker) 
 
 ## 1.1. Docker
 We provide a Docker file to run our code on other operating systems. Please refer to [Docker.md](docs/Docker.md) for more information.

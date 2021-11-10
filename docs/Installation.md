@@ -173,6 +173,32 @@ pip install -e .
 catkin_make -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=/usr/bin/python3
 ```
 
+* Set python path in .zshrc (or .bash if you use that)
+```
+nano ~/.zshrc
+```
+Add these lines below "source/opt/ros/melodic/setup.zsh"
+```
+source /$HOME/catkin_ws/devel/setup.zsh
+export PYTHONPATH=$HOME/catkin_ws/src/arena-rosnav:${PYTHONPATH}
+export PYTHONPATH=$HOME/geometry2_ws/devel/lib/python3/dist-packages:${PYTHONPATH}
+```
+
+* Install MPC-Planner
+
+```
+cd $HOME/catkin_ws/src/forks/navigation/local_planner/mpc/mpc_local_planner
+rosdep install mpc_local_planner
+```
+
+* (optional) Install CADRL dependencies (venv always activated!) 
+```
+cd $HOME/catkin_ws/src/arena-rosnav/arena_navigation/arena_local_planner/model_based/cadrl_ros
+pip install -r requirements_cadrl.txt
+```
+If you encounter errors, e.g. sopecific versions not found, please manually install the packages with an available version.
+  You only need this to run our cadrl node, if you dont plan to use it, skip this step.
+
 ## Update after developing flatland code
 After changes inside the forks/flatland folder you should do the following steps to fetch the latest version:
 ```
