@@ -1,21 +1,13 @@
 <?xml version="1.0"?>
 <package format="2">
     <name>global_planner_interface</name>
-<<<<<<< HEAD
     <version>1.0.0</version>
-=======
-    <version>0.0.0</version>
->>>>>>> 1a8e59c54fad27d512410e90773bb025b27a0fa2
     <description>A global planner interface service package. Based on Johannes Cox's all_in_one_global_planner_interface</description>
 
     <!-- One maintainer tag required, multiple allowed, one person per tag -->
     <!-- Example:  -->
     <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-<<<<<<< HEAD
     <maintainer email="johannes@todo.todo">johannes</maintainer>
-=======
-    <maintainer email="marvin@todo.todo">johannes</maintainer>
->>>>>>> 1a8e59c54fad27d512410e90773bb025b27a0fa2
 
 
     <!-- One license tag required, multiple allowed, one license per tag -->
