@@ -17,15 +17,15 @@ environment:
   goal_radius: 0.315
   reward_fnc: "rule_04"
   # a tolerance value that is used for collision checks. If the robot gets closer to an obstacle than this tolerance, a collsion will be detected. scan.min <= robot_radius + collision_tolerance.
-  collision_tolerance: 0.08
+  collision_tolerance: 0 
   # task mode of task generator: "random" or "staged" 
   task_mode: "staged"
   task_curr_stage: 1
   safe_dist: null
   extended_eval: True
-  train_max_steps_per_episode: 1000
+  train_max_steps_per_episode: 64
   # unused, only set for compatability issues with hyperparameter.json
-  eval_max_steps_per_episode: 1000
+  eval_max_steps_per_episode: 32
   use_first_synced_obs: True
   max_deque_size: 10
   sync_slop: 0.05
@@ -33,6 +33,7 @@ environment:
   # 1 = every step, 2 = every 2 steps the planner is called and the global_plan/subgoal gets updated
   global_planner_call_interval: 1
   mid_planner_call_interval: 1
+  map_update_frequency: 20 
 
 training:
   ## settings related to training and model
@@ -80,7 +81,7 @@ evaluation:
   ## settings related to creating evaluation callback
   model_save_dir: "models/trained/"
   # n_eval_episodes: number of episodes to evaluate agent on
-  n_eval_episodes: 4
+  n_eval_episodes: 1
   # eval_freq: evaluate the agent every eval_freq train timesteps
   eval_freq: 128
   deterministic: True

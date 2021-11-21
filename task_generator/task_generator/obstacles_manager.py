@@ -451,7 +451,6 @@ class ObstaclesManager:
         else:
             tmp_model_name = self.ns+"_random_static.model.yaml" if self.ns != "" else "random_static.model.yaml"
         yaml_path = os.path.join(tmp_folder_path, tmp_model_name)
-        print(f"!!!!!!!!!! {yaml_path}")
         # define body
         body = {}
         body["name"] = "random"
@@ -515,7 +514,6 @@ class ObstaclesManager:
             random_move['angular_velocity_max'] = angular_velocity_max
             random_move['body'] = 'random'
             dict_file['plugins'].append(random_move)
-        print("!!!!!write yaml")
         with open(os.path.join("/home/marvin", "test.yaml"), 'w') as fd:
             yaml.dump(dict_file, fd)
         with open(yaml_path, 'w') as fd:

@@ -6,6 +6,9 @@ import rosnode
 import gym
 import rospy
 import time
+import random
+import yaml
+import json
 from typing import Union
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.utils import set_random_seed
@@ -13,6 +16,8 @@ from .environment import FlatlandEnv
 from stable_baselines3.common.vec_env import VecNormalize
 from stable_baselines3.common.vec_env.base_vec_env import VecEnv
 from datetime import datetime as dt
+
+PACKAGE_DIR = rospkg.RosPack().get_path("arena_combined_planner_drl")
 
 def get_agent_name(args: argparse.Namespace, model_params: argparse.Namespace) -> str:
     """Function to get agent name to save to/load from file system
@@ -94,14 +99,28 @@ def get_paths(agent_name: str, args: argparse.Namespace) -> dict:
 
     return PATHS
 
+def unzip_map_parameters(paths: dict, numb_envs: int):
+    if not os.path.exists(os.path.join(paths['map_folder'], 'tmp')):
+        os.makedirs(os.path.join(paths['map_folder'], 'tmp'))
+    with open(paths['map_parameters'], "r") as map_yaml:
+        map_data = yaml.safe_load(map_yaml)
+        for i in range(numb_envs):
+            env_map_data = map_data[i+1]
+            map_env_path = os.path.join(paths['map_folder'], 'tmp', "map_" + str(i) + ".json")
+            with open(map_env_path, "w") as map_json:
+                json.dump(env_map_data, map_json)
+
+
 def setup_paths(args):
     """ setup the paths for saving logs and model """
+    dir = rospkg.RosPack().get_path("arena_combined_planner_drl")
     paths = {}
-    print(args.agent_name)
     paths['training'] = _setup_single_dir(args.train_log_dir, args.agent_name)
     paths['tensorboard'] = _setup_single_dir(args.tensorboard_log_dir, args.agent_name)
     paths['model'] = _setup_single_dir(args.model_save_dir, args.agent_name)
     paths['curriculum'] = _setup_single_dir(args.task_curriculum_path)
+    #paths['map_folder'] = os.path.join(dir, 'configs', 'map_parameters')
+    #paths['map_parameters'] = os.path.join(dir, 'configs', 'map_parameters', "map_curriculum_16envs.yaml")
     return paths
 
 def _setup_single_dir(relative_path: str, agent_name:str=None):
@@ -161,12 +180,14 @@ def make_envs(
     def _init() -> Union[gym.Env, gym.Wrapper]:
         train_ns = f"sim_{rank+1}" if with_ns else ""
         eval_ns = f"eval_sim" if with_ns else ""
-        print(train_ns, eval_ns)
         if train:
             # train env
+            #paths['map_parameters'] = os.path.join(paths['map_folder'], 'tmp', "map_" + str(rank) + ".json")
             env = FlatlandEnv(train_ns, args, paths, global_planner, mid_planner)
         else:
             # eval env
+            #paths['map_parameters'] = os.path.join(paths['map_folder'], "indoor_obs15.json")
+            #seed = random.randint(1,1000)
             env = Monitor(
                 FlatlandEnv(eval_ns, args, paths, global_planner, mid_planner),
                 paths['training'],

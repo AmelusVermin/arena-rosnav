@@ -193,7 +193,7 @@ class StagedRandomTask(RandomTask):
             self._PATHS.get("model"), "hyperparameters.json"
         )
         assert os.path.isfile(self.json_file), (
-            "Found no 'hyperparameters.json' at %s" % self.json_file
+           "Found no 'hyperparameters.json' at %s" % self.json_file
         )
         self._lock_json = FileLock(self.json_file + ".lock")
 
@@ -661,8 +661,8 @@ def get_predefined_task(
     # either e.g. ns = 'sim1/' or ns = ''
 
     # get the map
-
-    service_client_get_map = rospy.ServiceProxy("/static_map", GetMap)
+    ns_prefix = "" if (ns == "" or ns is None) else f"/{ns}"
+    service_client_get_map = rospy.ServiceProxy(f"{ns_prefix}/static_map", GetMap)
     map_response = service_client_get_map()
 
     # use rospkg to get the path where the model config yaml file stored

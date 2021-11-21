@@ -1,6 +1,6 @@
 <launch>
     <!-- Arguments -->
-    <arg name="ns" default="sim_1"/>
+    <arg name="ns" default=""/>
     <arg name="config_path" default="/home/marvin/catkin_ws/src/arena-rosnav/arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/configs/global_planner.yaml"/>
 
     <arg name="node_name" default="ROS_global_planner"/>
@@ -41,12 +41,10 @@
             <!-- global costmap params -->
             <param name="global_costmap/global_frame" value="$(arg global_frame)"/>
             <param name="global_costmap/robot_base_frame" value="$(arg base_footprint)"/>
-
             <param name="global_costmap/scan/sensor_frame" value="$(arg scan_frame)"/>
-
             <!-- remaps due to namespace -->
-            <remap from="/clock" to="/sim_1/clock"/>
-            <remap from="map" to="/map"/>
+            <remap from="/clock" to="/$(arg ns)/clock"/>
+            <remap from="map" to="/$(arg ns)/map"/>
 
         </node>
     </group>

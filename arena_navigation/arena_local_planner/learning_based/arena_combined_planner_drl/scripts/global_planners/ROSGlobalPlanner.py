@@ -28,7 +28,6 @@ class ROSGlobalPlanner(GlobalPlanner):
         arg3 = f"config_path:={config_path}" 
         command = ['roslaunch', package, launch_file, arg1, arg2, arg3]
         # start service
-        print(command)
         self._global_planner_process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)       
         # prepare variables
         self.last_successful_plan = nav_msgs.msg.Path()

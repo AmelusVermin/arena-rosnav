@@ -230,10 +230,8 @@ class RewardCalculator:
         :param laser_scan (np.ndarray): laser scan data
         :param punishment (float, optional): punishment for collision. defaults to 10
         """
-        #print(f"!!!{laser_scan.min()}, {self.robot_radius}, {self.collision_tolerance}")
         if laser_scan.min() <= self.robot_radius + self.collision_tolerance:
             self.curr_reward -= punishment
-        
             self.info["is_done"] = True
             self.info["done_reason"] = 1
             self.info["is_success"] = 0

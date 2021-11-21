@@ -23,7 +23,7 @@ from stable_baselines3.common.policies import BasePolicy
 from distutils.file_util import copy_file
 from utils.model_builder import ModelBuilder
 from utils.argparser import get_arguments, check_params
-from utils.startup_utils import make_envs, wait_for_nodes
+from utils.startup_utils import make_envs, wait_for_nodes, unzip_map_parameters
 from utils.staged_train_callback import InitiateNewTrainStage
 from model.agent_factory import AgentFactory
 from model.custom_policy import *
@@ -110,7 +110,8 @@ def main():
     write_hyperparameters_json(args, save_paths)
     model_path = save_paths["model"]
     print(f"saving model data to: {model_path}")
-
+    
+    #unzip_map_parameters(save_paths, args.n_envs)
     # instantiate train environment
     # when debug run on one process only
     if not args.debug and ns_for_nodes:

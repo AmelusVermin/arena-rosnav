@@ -15,6 +15,17 @@ GlobalPlannerInterface::GlobalPlannerInterface() : bgp_loader_("nav_core", "nav_
     
     // create   ROS handle
     ros::NodeHandle nh("~");
+    
+    // prepare some parameter values according to namespace
+    string static_layer_topic = "";
+    string scan_topic = "";
+    nh.getParam("global_costmap/static_layer/map_topic", static_layer_topic);
+    nh.getParam("global_costmap/obstacle_layer/scan/topic", scan_topic);
+    string ns = ros::this_node::getNamespace();
+    string ns_prefix = ns.compare("") ? "/" + ns + "/" : "/"; 
+    nh.param("global_costmap/static_layer/map_topic", ns_prefix + static_layer_topic);
+    nh.param("global_costmap/obstacle_layer/scan/topic", ns_prefix + scan_topic);
+    
     // create Costmap
     _costmap_ros = new costmap_2d::Costmap2DROS("global_costmap", tfBuffer);
     _costmap_ros->start();
