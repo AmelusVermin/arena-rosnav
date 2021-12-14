@@ -15,7 +15,7 @@ environment:
   task_curriculum_path: "configs/training_curriculum.yaml"
   # the goal is reached when the robot enters the circle determined by this radius around the goal, the orientation is ignored
   goal_radius: 0.315
-  reward_fnc: "rule_04"
+  reward_fnc: "rule_05"
   # a tolerance value that is used for collision checks. If the robot gets closer to an obstacle than this tolerance, a collsion will be detected. scan.min <= robot_radius + collision_tolerance.
   collision_tolerance: 0 
   # task mode of task generator: "random" or "staged" 
@@ -23,17 +23,17 @@ environment:
   task_curr_stage: 1
   safe_dist: null
   extended_eval: True
-  train_max_steps_per_episode: 64
+  train_max_steps_per_episode: 1024
   # unused, only set for compatability issues with hyperparameter.json
-  eval_max_steps_per_episode: 32
+  eval_max_steps_per_episode: 1024
   use_first_synced_obs: True
   max_deque_size: 10
   sync_slop: 0.05
   # interval in steps when the planners are called. 
   # 1 = every step, 2 = every 2 steps the planner is called and the global_plan/subgoal gets updated
-  global_planner_call_interval: 1
-  mid_planner_call_interval: 1
-  map_update_frequency: 20 
+  #global_planner_call_interval: 8
+  #mid_planner_call_interval: 8
+  #map_update_frequency: 20 
 
 training:
   ## settings related to training and model
@@ -41,24 +41,23 @@ training:
   train_log_dir: "logs/training_logs"
   tensorboard_log_dir: "logs/tensorboard"
   ## learning related settings
-  batch_size: 384
+  batch_size: 128
   gamma: 0.99 
-  ent_coef: 0.005 
-  learning_rate: 0.0003
-  vf_coef: 0.22
+  ent_coef: 0.01 #0.005 
+  learning_rate: 2.5e-4 #0.0003
+  vf_coef: 0.5 #0.22
   max_grad_norm: 0.5
   gae_lambda: 0.95
-  mini_batch_size: 16
-  n_epochs: 3
+  # number of envrionments run in parallel should be a multiple of mini_batch_size for recurrent policies
+  mini_batch_size: 8 
+  n_epochs: 4
   clip_range: 0.22
   normalize: True
-  total_timesteps: 65536
+  total_timesteps: 524288
   train_verbose: 1
+  seed: null
 model:
   ## model related settings. Used in model_builder.py
-  # string: path to yaml file that contains additional agent_type dependent params (currently only necessary for CUSTOM_MLP)
-  # default: "configs/custom_mlp_settings.yaml"
-  model_config_path: "configs/custom_mlp_settings.yaml"
   # boolean: true if an existing model shall be loaded. 
   # model_path and update_params need to be set if true
   load_model: false
@@ -69,7 +68,7 @@ model:
   overwrite_params: true
   # string: agent_type that shall be created like CUSTOM_MLP, or AGENT_6, use command line option --show_registered_types or -srt
   # is ignored if model_path is true
-  agent_type: "AGENT_21"
+  agent_type: "CUSTOM_MLP_LN_LSTM" #"CUSTOM_MLP"
 trainstage:
   ## settings related to creating TrainStage callback
   # type can be either 'succ' or 'rew'
@@ -81,12 +80,18 @@ evaluation:
   ## settings related to creating evaluation callback
   model_save_dir: "models/trained/"
   # n_eval_episodes: number of episodes to evaluate agent on
-  n_eval_episodes: 1
+  n_eval_episodes: 4
   # eval_freq: evaluate the agent every eval_freq train timesteps
-  eval_freq: 128
+  eval_freq: 20480
   deterministic: True
 stoptraining:
   ## settings related to creating stop training callback
   stop_threshhold_type: "succ"
   stop_reward_threshhold: 0.9
   stop_verbose: 1
+custom_network:
+  shared_layers: "64-64"
+  policy_layer_sizes: "128-128"
+  value_layer_sizes: "128-128"
+  # can be "relu", "sigmoid" or "tanh"
+  act_fn: "relu"

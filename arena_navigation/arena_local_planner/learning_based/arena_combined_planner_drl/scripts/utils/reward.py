@@ -1,7 +1,5 @@
 import numpy as np
 import scipy.spatial
-
-from numpy.lib.utils import safe_eval
 from geometry_msgs.msg import Pose2D
 from typing import Tuple
 
@@ -30,6 +28,7 @@ class RewardCalculator:
         self.robot_radius = robot_radius
         self.goal_radius = goal_radius
         self.last_goal_dist = None
+        self.last_subgoal_dist = None
         self.last_dist_to_path = None
         self.last_action = None
         self.safe_dist = safe_dist
@@ -44,6 +43,7 @@ class RewardCalculator:
             "rule_02": RewardCalculator._cal_reward_rule_02,
             "rule_03": RewardCalculator._cal_reward_rule_03,
             "rule_04": RewardCalculator._cal_reward_rule_04,
+            "rule_05": RewardCalculator._cal_reward_rule_05,
         }
         self.cal_func = self._cal_funcs[rule]
 
@@ -178,23 +178,98 @@ class RewardCalculator:
             goal_in_robot_frame, reward_factor=0.3, penalty_factor=0.4
         )
 
-    def _reward_goal_reached(
-        self, goal_in_robot_frame=Tuple[float, float], reward: float = 15
+    def _cal_reward_rule_05(
+        self,
+        laser_scan: np.ndarray,
+        goal_in_robot_frame: Tuple[float, float],
+        *args,
+        **kwargs
     ):
+        self._reward_distance_traveled(kwargs["action"], consumption_factor=0.0075)
+        self._reward_abrupt_direction_change(kwargs["action"])
+        self._reward_following_global_plan(
+            kwargs["global_plan"], kwargs["robot_pose"], kwargs["action"]
+        )
+        if laser_scan.min() > self.safe_dist:
+            self._reward_distance_global_plan(
+                kwargs["global_plan"],
+                kwargs["robot_pose"],
+                reward_factor=0.2,
+                penalty_factor=0.3,
+            )
+        else:
+            self.last_dist_to_path = None
+        # as the agent only gets the subgoal as input, reaching the goal is only necessary for finishing episode
+        self._reward_goal_reached(goal_in_robot_frame, reward=0)
+        self._reward_subgoal_reached(kwargs["subgoal"], reward=3)
+        self._reward_safe_dist(laser_scan, punishment=0.25)
+        self._reward_collision(laser_scan, punishment=15)
+        self._reward_subgoal_approached(
+            kwargs["subgoal"], reward_factor=0.3, penalty_factor=0.4
+        )
+        self._reward_time_consumption(kwargs["episode_steps_passed"])
+    
+    def _reward_time_consumption(self, steps_passed, punishment=0.05):
+        self.curr_reward = steps_passed * -punishment
+
+    def _reward_subgoal_reached(self, subgoal=Tuple[float, float], reward: float = 2.5):
         """
         Reward for reaching the goal.
 
         :param goal_in_robot_frame (Tuple[float,float]): position (rho, theta) of the goal in robot frame (Polar coordinate)
         :param reward (float, optional): reward amount for reaching. defaults to 15
         """
-        if goal_in_robot_frame[0] < self.goal_radius:
-            self.curr_reward = reward
+        if subgoal[0] < self.goal_radius + self.robot_radius:
+            self.curr_reward += reward
+            self.info["reached_subgoal"] = True
+        else:
+            self.info["reached_subgoal"] = False
+
+    def _reward_goal_reached(
+        self, goal_in_robot_frame=Tuple[float, float], reward: float = 15
+    ):
+        """
+        Reward for reaching a given point.
+
+        :param goal_in_robot_frame (Tuple[float,float]): position (rho, theta) of the goal in robot frame (Polar coordinate)
+        :param reward (float, optional): reward amount for reaching. defaults to 15
+        """
+        if goal_in_robot_frame[0] < self.goal_radius + self.robot_radius:
+            self.curr_reward += reward
             self.info["is_done"] = True
             self.info["done_reason"] = 2
             self.info["is_success"] = 1
         else:
             self.info["is_done"] = False
 
+    def _reward_subgoal_approached(
+        self,
+        subgoal=Tuple[float, float],
+        reward_factor: float = 0.3,
+        penalty_factor: float = 0.5,
+    ):
+        """
+        Reward for approaching the goal.
+
+        :param goal_in_robot_frame (Tuple[float,float]): position (rho, theta) of the goal in robot frame (Polar coordinate)
+        :param reward_factor (float, optional): positive factor for approaching goal. defaults to 0.3
+        :param penalty_factor (float, optional): negative factor for withdrawing from goal. defaults to 0.5
+        """
+        if self.last_subgoal_dist is not None:
+            # goal_in_robot_frame : [rho, theta]
+
+            # higher negative weight when moving away from goal
+            # (to avoid driving unnecessary circles when train in contin. action space)
+            if (self.last_subgoal_dist - subgoal[0]) > 0:
+                w = reward_factor
+            else:
+                w = penalty_factor
+            reward = w * (self.last_subgoal_dist - subgoal[0])
+
+            # print("reward_goal_approached:  {}".format(reward))
+            self.curr_reward += reward
+        self.last_subgoal_dist = subgoal[0]
+        
     def _reward_goal_approached(
         self,
         goal_in_robot_frame=Tuple[float, float],

@@ -1,8 +1,6 @@
 import numpy as np
 from geometry_msgs.msg import Pose2D
 from tf.transformations import *
-from stable_baselines3.common.utils import set_random_seed
-
 
 def get_pose_difference(goal_pos: Pose2D, robot_pos: Pose2D):
         y_relative = goal_pos.y - robot_pos.y

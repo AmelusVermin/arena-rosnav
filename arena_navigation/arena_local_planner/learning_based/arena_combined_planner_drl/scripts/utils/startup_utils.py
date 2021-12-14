@@ -6,20 +6,21 @@ import rosnode
 import gym
 import rospy
 import time
-import random
 import yaml
 import json
+import signal
+import ctypes
 from typing import Union
-from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.utils import set_random_seed
+from stable_baselines.bench import Monitor
+#from stable_baselines.common.utils import set_random_seed
 from .environment import FlatlandEnv
-from stable_baselines3.common.vec_env import VecNormalize
-from stable_baselines3.common.vec_env.base_vec_env import VecEnv
+from stable_baselines.common.vec_env import VecNormalize
+from stable_baselines.common.vec_env.base_vec_env import VecEnv
 from datetime import datetime as dt
 
 PACKAGE_DIR = rospkg.RosPack().get_path("arena_combined_planner_drl")
 
-def get_agent_name(args: argparse.Namespace, model_params: argparse.Namespace) -> str:
+def get_agent_name(args: argparse.Namespace) -> str:
     """Function to get agent name to save to/load from file system
 
     Example names:
@@ -32,14 +33,27 @@ def get_agent_name(args: argparse.Namespace, model_params: argparse.Namespace) -
     agent_name = args.load_model
     if args.agent_type == "CUSTOM_MLP":
         agent_name = (
-            "CUSTOM_MLP_B_"
-            + model_params.body
+            "CUSTOM_MLP_S_"
+            + args.shared_layers
             + "_P_"
-            + model_params.pi
+            + args.policy_layer_sizes
             + "_V_"
-            + model_params.vf
+            + args.value_layer_sizes
             + "_"
-            + model_params.act_fn
+            + args.act_fn
+            + "_"
+            + START_TIME
+        )
+    if args.agent_type == "CUSTOM_CNN_LN_LSTM":
+        agent_name = (
+            "CUSTOM_CNN_LN_LSTM_S_"
+            + args.shared_layers
+            + "_P_"
+            + args.policy_layer_sizes
+            + "_V_"
+            + args.value_layer_sizes
+            + "_"
+            + args.act_fn
             + "_"
             + START_TIME
         )
@@ -113,7 +127,6 @@ def unzip_map_parameters(paths: dict, numb_envs: int):
 
 def setup_paths(args):
     """ setup the paths for saving logs and model """
-    dir = rospkg.RosPack().get_path("arena_combined_planner_drl")
     paths = {}
     paths['training'] = _setup_single_dir(args.train_log_dir, args.agent_name)
     paths['tensorboard'] = _setup_single_dir(args.tensorboard_log_dir, args.agent_name)
@@ -159,7 +172,6 @@ def make_envs(
     global_planner,
     mid_planner,
     paths: dict,
-    seed: int = 0,
     train: bool = True,
     
 ):
@@ -191,12 +203,9 @@ def make_envs(
             env = Monitor(
                 FlatlandEnv(eval_ns, args, paths, global_planner, mid_planner),
                 paths['training'],
-                info_keywords=("done_reason", "is_success"),
+                info_keywords=("done_reason", "is_success", "reached_subgoal", "crash", "safe_dist"),
             )
-        env.seed(seed + rank)
         return env
-
-    set_random_seed(seed)
     return _init
 
 
@@ -246,3 +255,10 @@ def load_vec_normalize(args: argparse.Namespace, save_paths: dict, env: VecEnv, 
                 clip_reward=15,
             )
         return env, eval_env
+
+def set_pdeathsig(sig = signal.SIGTERM):
+    """ Used for sending signals to subprocess when parent process dies. (used as parameter in Popen) """
+    libc = ctypes.CDLL("libc.so.6")
+    def callable():
+        return libc.prctl(1, sig)
+    return callable

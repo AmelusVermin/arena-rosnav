@@ -41,3 +41,11 @@ class Dummy(GlobalPlanner):
         global_path.header = header
         return global_path
 
+    def close(self):
+        """ Cleans the class when closing the program. No cleaning to do when closing this planner"""
+        pass   
+    
+    def is_ready(self):
+        """ Returns if the planner is ready for work. It is always ready """
+        return True
+

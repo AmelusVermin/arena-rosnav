@@ -1,27 +1,31 @@
-import torch as th
+import tensorflow as tf
 import argparse
-from stable_baselines3 import PPO
 
-def get_net_arch(args: argparse.Namespace):
+def get_net_arch(args: argparse.Namespace, is_lstm=False):
     """function to convert input args into valid syntax for the PPO"""
-    body, policy, value = None, None, None
+    shared_layers, policy_layers, value_layers = None, None, None
 
-    if args.body != "":
-        body = parse_network_size(args.body)
-    if args.pi != "":
-        policy = parse_network_size(args.pi)
-    if args.vf != "":
-        value = parse_network_size(args.vf)
+    if args.shared_layers != "":
+        shared_layers = parse_network_size(args.shared_layers)
+    if args.policy_layer_sizes != "":
+        policy_layers = parse_network_size(args.policy_layer_sizes)
+    if args.value_layer_sizes != "":
+        value_layers = parse_network_size(args.value_layer_sizes)
 
-    if body is None:
-        body = []
+    if shared_layers is None:
+        shared_layers = []
     vf_pi = {}
-    if value is not None:
-        vf_pi["vf"] = value
-    if policy is not None:
-        vf_pi["pi"] = policy
+    if value_layers is not None:
+        vf_pi["vf"] = value_layers
+    if policy_layers is not None:
+        vf_pi["pi"] = policy_layers
 
-    return body + [vf_pi]
+    if is_lstm:
+        net_arch = shared_layers + ['lstm'] + [vf_pi]
+    else:
+        net_arch = shared_layers + [vf_pi]
+    #print(net_arch)
+    return net_arch
 
 
 def parse_network_size(string: str):
@@ -46,9 +50,9 @@ def parse_network_size(string: str):
 def get_act_fn(act_fn_string: str):
     """function to convert str into pytorch activation function class"""
     if act_fn_string == "relu":
-        return th.nn.ReLU
+        return tf.keras.activations.relu
     elif act_fn_string == "sigmoid":
-        return th.nn.Sigmoid
+        return tf.keras.activations.sigmoid
     elif act_fn_string == "tanh":
-        return th.nn.Tanh
+        return tf.keras.activations.tanh
 

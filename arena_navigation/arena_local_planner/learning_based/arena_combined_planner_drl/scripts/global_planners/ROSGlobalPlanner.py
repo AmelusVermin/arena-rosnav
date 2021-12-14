@@ -4,12 +4,15 @@ import rospy
 import rospkg
 import os
 import subprocess
-import rosservice
+import time
 from geometry_msgs.msg import Pose, PoseStamped
+from rospy.exceptions import ROSException
 from .global_planner import GlobalPlanner
 from global_planner_interface.srv import MakeNewPlan
+from utils.startup_utils import set_pdeathsig
 import nav_msgs
 import std_msgs
+import signal
 
 NAME = "ROS_global_planner"
 class ROSGlobalPlanner(GlobalPlanner):
@@ -27,18 +30,16 @@ class ROSGlobalPlanner(GlobalPlanner):
         arg2 = f"node_name:={ROSGlobalPlanner.get_name()}"
         arg3 = f"config_path:={config_path}" 
         command = ['roslaunch', package, launch_file, arg1, arg2, arg3]
-        # start service
-        self._global_planner_process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)       
+        # start service node
+        self._global_planner_process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, preexec_fn=set_pdeathsig(signal.SIGTERM))       
         # prepare variables
         self.last_successful_plan = nav_msgs.msg.Path()
 
     def get_global_plan(self, goal, odom):
         """ Calls the global planner service with the given goal and returns response. Ignores odom """
-        rospy.logdebug(f"waiting for global planner service in namespace: '{self.ns}'")
+        
         prefix = "" if self.ns == "" else f"/{self.ns}"
-        rospy.wait_for_service(f'{prefix}/{ROSGlobalPlanner.get_name()}/makeGlobalPlan')
         make_new_plan = rospy.ServiceProxy(f'{prefix}/{ROSGlobalPlanner.get_name()}/makeGlobalPlan', MakeNewPlan)
-        rospy.logdebug(f"global planner service available for namespace: '{self.ns}'")
         try:
             # prepare header, as service response doesn't have one
             header = header = std_msgs.msg.Header()
@@ -71,3 +72,17 @@ class ROSGlobalPlanner(GlobalPlanner):
     @staticmethod
     def get_name():
         return NAME
+
+    def close(self):
+        # stop service node
+        self._global_planner_process.terminate()
+
+    def is_ready(self):
+        prefix = "" if self.ns == "" else f"/{self.ns}"
+        try:
+            rospy.logdebug(f"waiting for global planner service in namespace: '{self.ns}'")
+            rospy.wait_for_service(f'{prefix}/{ROSGlobalPlanner.get_name()}/makeGlobalPlan', 0.25)
+            rospy.logdebug(f"global planner service available for namespace: '{self.ns}'")
+            return True
+        except rospy.ROSException as e:
+            return False

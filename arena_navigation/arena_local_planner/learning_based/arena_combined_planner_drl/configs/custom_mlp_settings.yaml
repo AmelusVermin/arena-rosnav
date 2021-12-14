@@ -1,5 +1,5 @@
-body: "64-64"
-pi: "32-32"
-vf: "32-32"
+shared_layers: "64-64"
+policy_layer_sizes: "128-128"
+value_layer_sizes: "128-128"
 # can be "relu", "sigmoid" or "tanh"
 act_fn: "relu"

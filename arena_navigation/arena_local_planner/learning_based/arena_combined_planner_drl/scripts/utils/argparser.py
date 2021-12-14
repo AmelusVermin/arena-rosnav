@@ -19,14 +19,11 @@ def get_arguments(settings_path:str):
     args = _add_robot_config(args)
     args = add_yaml_config(args, settings_path)
 
-    # get additional model parameters
-    add_model_params = argparse.Namespace()
-    add_yaml_config(add_model_params, args.model_config_path)
     # set agent name
-    setattr(args, "agent_name", get_agent_name(args, add_model_params))
+    setattr(args, "agent_name", get_agent_name(args))
     # prepare some paths for logging and saving
     save_paths = setup_paths(args)
-    return args, add_model_params, save_paths
+    return args, save_paths
     
 
 def _get_commandline_args():

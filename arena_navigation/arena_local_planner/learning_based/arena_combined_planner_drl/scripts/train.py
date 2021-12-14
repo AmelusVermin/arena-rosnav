@@ -1,39 +1,27 @@
 #!/usr/bin/env python
-import argparse
-from warnings import catch_warnings
-from arena_navigation.arena_local_planner.learning_based.arena_combined_planner_drl.scripts.utils.startup_utils import load_vec_normalize
+
 import rospy
 import time
-import torch as th
 import os
 import rospkg
 import sys
 import subprocess
-from typing import Type, Union
+import signal
 from pydoc import locate
-from stable_baselines3 import PPO
-from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
-from stable_baselines3.common.policies import ActorCriticPolicy
-from stable_baselines3.common.callbacks import (
-    EvalCallback,
-    StopTrainingOnRewardThreshold,
-)
-from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.policies import BasePolicy
-from distutils.file_util import copy_file
+from stable_baselines.common.vec_env import SubprocVecEnv, DummyVecEnv
+
+from distutils.dir_util import copy_tree
+from utils.startup_utils import load_vec_normalize, set_pdeathsig
 from utils.model_builder import ModelBuilder
 from utils.argparser import get_arguments, check_params
-from utils.startup_utils import make_envs, wait_for_nodes, unzip_map_parameters
-from utils.staged_train_callback import InitiateNewTrainStage
-from model.agent_factory import AgentFactory
-from model.custom_policy import *
-from model.simple_lstm_policy import *
-from model.custom_sb3_policy import *
+from utils.startup_utils import make_envs, wait_for_nodes
+from utils.custom_callbacks import StopTrainingOnRewardThreshold, InitiateNewTrainStage, EvalCallback
+from policies.sb_policy_registry import PolicyRegistry
 from utils.hyperparameter_utils import write_hyperparameters_json
 
 
 def print_registered_types():
-    all_types = AgentFactory.get_all_registered_agents()
+    all_types = PolicyRegistry.get_all_registered_agents()
     print("The following agent types are available:")
     for i, agent_type in enumerate(all_types):
         print(f"Type {i+1}: {agent_type}")
@@ -41,13 +29,17 @@ def print_registered_types():
 def main():
     # get command line arguments and params from relevant config files 
     # (environment_settings.yaml from this package and myrobot.model.yaml from simulator_setup)
+    config_path = os.path.join(
+        rospkg.RosPack().get_path("arena_combined_planner_drl"), 
+        "configs"
+    )
     settings_file = os.path.join(
         rospkg.RosPack().get_path("arena_combined_planner_drl"), 
         "configs", 
         "settings.yaml"
     )
     
-    args, model_params, save_paths = get_arguments(settings_file)
+    args, save_paths = get_arguments(settings_file)
     
     # remember used settings file
     if args.settings_file is not "":
@@ -71,13 +63,9 @@ def main():
     if args.debug:
         print(f"parsed arguments: {args}")
 
-
-    #PATHS = get_paths("a1", args)
     # for training with start_arena_flatland.launch
     ros_params = rospy.get_param_names()
     ns_for_nodes = "/single_env" not in ros_params
-    
-    
     
     # if no environment number was given on commandline, try to get it from ros
     if args.n_envs <= 0:
@@ -89,6 +77,7 @@ def main():
 
             args.n_envs = 1
     
+    # check and prepare some arguments
     check_params(args)
     args.n_steps = int(args.batch_size / args.n_envs)
 
@@ -102,11 +91,11 @@ def main():
     print(f"used mid planner: {mid_planner.get_name()}")    
     
     # save configs to save dir
-    copy_file(settings_file, save_paths['model'])
-    copy_file(args.model_config_path, save_paths['model'])
-    curriculum_file_name = save_paths['curriculum'].split("/")[-1]
-    copy_file(save_paths['curriculum'], os.path.join(save_paths['model'], curriculum_file_name))
-    # for compatability issues the hyperparameters.json is neccessary (the task_generator uses it)
+    copy_tree(config_path, save_paths['model'])
+    #copy_file(settings_file, save_paths['model'])
+    #curriculum_file_name = save_paths['curriculum'].split("/")[-1]
+    #copy_file(save_paths['curriculum'], os.path.join(save_paths['model'], curriculum_file_name))
+    # for compatability issues the hyperparameters.json is neccessary (the task_generator uses it after an update)
     write_hyperparameters_json(args, save_paths)
     model_path = save_paths["model"]
     print(f"saving model data to: {model_path}")
@@ -143,7 +132,9 @@ def main():
 
     # stop training on reward threshold callback
     stoptraining_cb = StopTrainingOnRewardThreshold(
-        treshhold_type=args.stop_threshhold_type, threshold=args.stop_reward_threshhold, verbose=args.stop_verbose
+        treshhold_type=args.stop_threshhold_type, 
+        threshold=args.stop_reward_threshhold, 
+        verbose=args.stop_verbose
     )
 
     # threshold settings for training curriculum
@@ -170,14 +161,14 @@ def main():
     )
 
     # get model, either build new one or load a specified one
-    model = ModelBuilder.get_model(args, model_params, save_paths, env)
+    model = ModelBuilder.get_model(args, save_paths, env)
  
-    command = ['tensorboard', f"--logdir={save_paths['tensorboard']}"]
-   
-    # start service
-    tensorboard_process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)       
-
+    # start tensorboard
+    command = ['tensorboard', f"--logdir={save_paths['tensorboard']}", "--port=6006"]
+    tensorboard_process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, preexec_fn=set_pdeathsig(signal.SIGTERM))       
+    time.sleep((args.n_envs + 1) * 2)
     # track training time
+    rospy.loginfo("start training")
     start = time.time() 
     try:
         model.learn(
@@ -187,7 +178,7 @@ def main():
         print("KeyboardInterrupt..")
 
     model.env.close()
-    tensorboard_process.kill()
+    tensorboard_process.terminate()
     print(f"Time passed: {time.time()-start}s")
     print("Training script will be terminated")
     sys.exit()

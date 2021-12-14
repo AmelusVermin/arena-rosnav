@@ -17,3 +17,11 @@ class MidPlanner(ABC):
     @abstractmethod
     def get_subgoal(self, global_plan : nav_msgs.msg.Path, odom : Odometry) -> PoseStamped:
         pass
+
+    @abstractmethod
+    def close(self):
+        pass
+
+    @abstractmethod
+    def is_ready(self):
+        pass

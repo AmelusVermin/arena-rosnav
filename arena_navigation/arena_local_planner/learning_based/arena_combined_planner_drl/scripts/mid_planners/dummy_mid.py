@@ -18,3 +18,9 @@ class Dummy(MidPlanner):
         subgoal = PoseStamped()
         subgoal = global_plan.poses[-1]
         return subgoal
+
+    def close(self):
+        pass
+    
+    def is_ready(self):
+        return True
