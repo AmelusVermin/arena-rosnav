@@ -1,0 +1,30 @@
+<launch>
+
+  <arg name="ns"/>
+  <arg name="type"/>
+  <arg name="indoor_prob" />
+
+  <!-- start map generator node -->
+  <node pkg="simulator_setup" name="map_generator_node" type="map_generator_node.py" ns="$(arg ns)">
+    <param name="ns" value="$(arg ns)" />
+    <param name="map_type" value="$(arg type)" />
+    <param name="indoor_prob" value="$(arg indoor_prob)" />
+    <!-- general map parameters -->
+    <param name="height" value="150" />
+    <param name="width" value="150" />
+    <param name="resolution" value="0.11" />
+    <!-- indoor map parameters -->
+    <param name="corridor_radius" value="8" />
+    <param name="iterations" value="50" />
+    <param name="room_number" value="3" />
+    <param name="room_width" value="40" />
+    <param name="room_height" value="45" />
+    <param name="no_overlap" value="True" />
+    <!-- outdoor map parameters -->
+    <param name="obstacle_number" value="15" />
+    <param name="obstacle_extra_radius" value="6" />
+    
+    <remap from="/clock" to="/$(arg ns)/clock"/>
+  </node>
+
+</launch>

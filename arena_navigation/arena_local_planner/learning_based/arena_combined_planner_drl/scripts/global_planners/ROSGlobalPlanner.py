@@ -9,7 +9,7 @@ from geometry_msgs.msg import Pose, PoseStamped
 from rospy.exceptions import ROSException
 from .global_planner import GlobalPlanner
 from global_planner_interface.srv import MakeNewPlan
-from utils.startup_utils import set_pdeathsig
+from utils.multi_threading_utils import set_pdeathsig
 import nav_msgs
 import std_msgs
 import signal

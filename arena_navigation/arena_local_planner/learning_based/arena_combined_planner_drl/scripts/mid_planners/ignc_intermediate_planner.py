@@ -10,7 +10,7 @@ import traceback
 from geometry_msgs.msg import PoseStamped
 from .mid_planner import MidPlanner
 from intermediate_planner_interface.srv import MakeIntermediateGoal
-from utils.startup_utils import set_pdeathsig
+from utils.multi_threading_utils import set_pdeathsig
 import signal
 NAME = "ignc_intermediate_planner"
 class IntermediatePlanner(MidPlanner):

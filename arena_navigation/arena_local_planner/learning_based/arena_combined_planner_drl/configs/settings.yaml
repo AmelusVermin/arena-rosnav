@@ -34,6 +34,8 @@ environment:
   global_planner_call_interval: 1
   mid_planner_call_interval: 1
   #map_update_frequency: 20 
+  map_type: "indoor"
+  indoor_prob: 0.5
 
 training:
   ## settings related to training and model

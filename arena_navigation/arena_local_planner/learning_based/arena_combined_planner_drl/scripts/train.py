@@ -11,7 +11,8 @@ from pydoc import locate
 from stable_baselines.common.vec_env import SubprocVecEnv, DummyVecEnv
 
 from distutils.dir_util import copy_tree
-from utils.startup_utils import load_vec_normalize, set_pdeathsig
+from utils.startup_utils import load_vec_normalize
+from utils.multi_threading_utils import set_pdeathsig
 from utils.model_builder import ModelBuilder
 from utils.argparser import get_arguments, check_params
 from utils.startup_utils import make_envs, wait_for_nodes

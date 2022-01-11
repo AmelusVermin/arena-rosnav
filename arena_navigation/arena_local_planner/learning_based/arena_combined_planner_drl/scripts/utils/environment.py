@@ -4,6 +4,7 @@ import numpy as np
 import time
 import re
 import nav_msgs
+import random
 
 from flatland_msgs.srv import StepWorld, StepWorldRequest
 from gym import spaces
@@ -14,11 +15,12 @@ from task_generator.task_generator.tasks import *
 from .geometry_utils import pose3D_to_pose2D, get_pose_difference, get_path_length
 from .observer import Observer
 from .reward import RewardCalculator
+from .task_manager import TaskManager
 
 class FlatlandEnv(gym.Env):
     """ Custom environment that follows gym interface """
 
-    def __init__(self, ns, args, paths, global_planner, mid_planner, train_mode=True, seed=1):
+    def __init__(self, ns, args, paths, global_planner, mid_planner, train_mode=True, seed=1, evaluation=False):
         t1 = time.perf_counter()
         super(FlatlandEnv, self).__init__()
 
@@ -42,6 +44,7 @@ class FlatlandEnv(gym.Env):
         self._steps_curr_episode = 0
         self._curr_episode = 0
         self._seed = seed
+        self._evaluation = evaluation
         self._train_mode = train_mode
 
         # init ros node for environment 
@@ -95,7 +98,9 @@ class FlatlandEnv(gym.Env):
         )
 
         # create task 
-        self._task_manager = get_predefined_task(self.ns, mode=args.task_mode, start_stage=args.task_curr_stage, PATHS=paths)
+        self._task_manager = TaskManager(self.ns, paths, False, args.task_curr_stage)
+        #self._task_manager = get_predefined_task(self.ns, mode=args.task_mode, start_stage=args.task_curr_stage, PATHS=paths)
+
 
         # publisher for random map training
         self.demand_map_pub = rospy.Publisher("/demand", String, queue_size=1)
@@ -241,7 +246,11 @@ class FlatlandEnv(gym.Env):
         self._observer.reset()
 
         # reset task manager
-        self._task_manager.reset()
+        if self._evaluation:
+            seed = (self._current_eval_iteration % self._evaluation_episodes) * self._seed
+        else:
+            seed = random.randint(0, 1000000)
+        self._task_manager.reset(seed)
         
         self.reward_calculator.reset()
         self._steps_curr_episode = 0

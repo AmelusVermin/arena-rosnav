@@ -4,17 +4,81 @@
 # (will carry on training on last stage when threshhold reached)
 
 1:
-  static: 40
+  static: 10
   dynamic: 10
+  map_type: "indoor"
+  map_height: 150
+  map_width: 150
+  map_resolution: 0.11
+  indoor_corridor_radius: 8
+  indoor_iterations: 50
+  indoor_room_number: 3
+  indoor_room_width: 40
+  indoor_room_height: 45
+  indoor_room_no_overlap: True
+  outdoor_obstacle_number: 15
+  outdoor_obstacle_extra_radius: 6
+
 2:
   static: 4
   dynamic: 0
+  map_type: "outdoor"
+  map_height: 150
+  map_width: 150
+  map_resolution: 0.11
+  indoor_corridor_radius: 8
+  indoor_iterations: 50
+  indoor_room_number: 3
+  indoor_room_width: 40
+  indoor_room_height: 45
+  indoor_room_no_overlap: True
+  outdoor_obstacle_number: 15
+  outdoor_obstacle_extra_radius: 6
+
 3:
   static: 4
   dynamic: 4
+  map_type: "indoor"
+  map_height: 150
+  map_width: 150
+  map_resolution: 0.11
+  indoor_corridor_radius: 8
+  indoor_iterations: 50
+  indoor_room_number: 3
+  indoor_room_width: 40
+  indoor_room_height: 45
+  indoor_room_no_overlap: True
+  outdoor_obstacle_number: 15
+  outdoor_obstacle_extra_radius: 6
+
 4:
   static: 8
   dynamic: 8
+  map_type: "indoor"
+  map_height: 150
+  map_width: 150
+  map_resolution: 0.11
+  indoor_corridor_radius: 8
+  indoor_iterations: 50
+  indoor_room_number: 3
+  indoor_room_width: 40
+  indoor_room_height: 45
+  indoor_room_no_overlap: True
+  outdoor_obstacle_number: 15
+  outdoor_obstacle_extra_radius: 6
+
 5:
   static: 12
   dynamic: 12
+  map_type: "indoor"
+  map_height: 150
+  map_width: 150
+  map_resolution: 0.11
+  indoor_corridor_radius: 8
+  indoor_iterations: 50
+  indoor_room_number: 3
+  indoor_room_width: 40
+  indoor_room_height: 45
+  indoor_room_no_overlap: True
+  outdoor_obstacle_number: 15
+  outdoor_obstacle_extra_radius: 6
