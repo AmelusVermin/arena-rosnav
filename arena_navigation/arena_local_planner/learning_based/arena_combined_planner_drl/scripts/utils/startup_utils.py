@@ -203,7 +203,7 @@ def make_envs(
             env = Monitor(
                 FlatlandEnv(eval_ns, args, paths, global_planner, mid_planner),
                 paths['training'],
-                info_keywords=("done_reason", "is_success", "reached_subgoal", "crash", "safe_dist"),
+                info_keywords=("done_reason", "is_success", "crash", "safe_dist"),
             )
         return env
     return _init

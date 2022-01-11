@@ -1,0 +1,16 @@
+<launch>
+    <arg name="ns" />
+    <arg name="map_file"/>
+    <arg name="map_path"    default="$(find simulator_setup)/maps/$(arg map_file)/map.yaml"/>
+    <!-- map server-->
+
+    <!-- set map parameters -->
+    <param name="/$(arg ns)/flatland_server/world_path" value="$(find simulator_setup)/maps/$(arg map_file)/map.world.yaml"/>
+    <param name="/$(arg ns)/flatland_server/map_layer_path" value="$(find simulator_setup)/maps/$(arg map_file)/map_layer.yaml"/>
+    <param name="/$(arg ns)/flatland_server/map_file" value="$(arg map_file)" />
+
+    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_path)" ns="$(arg ns)">
+      <!-- In multi-env training /clock not available, since we only want one map_server, it's clock topic is remapped to /clock -->
+      <remap from="/clock" to="/$(arg ns)/clock" />
+    </node>
+</launch>

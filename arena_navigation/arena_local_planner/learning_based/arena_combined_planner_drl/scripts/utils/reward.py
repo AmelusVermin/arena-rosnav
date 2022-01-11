@@ -1,8 +1,10 @@
 import numpy as np
 import scipy.spatial
+from arena_navigation.arena_local_planner.learning_based.arena_local_planner_drl.rl_agent.utils import reward
 from geometry_msgs.msg import Pose2D
 from typing import Tuple
-
+from collections import deque
+import rospy
 
 class RewardCalculator:
     def __init__(
@@ -25,6 +27,7 @@ class RewardCalculator:
         self.curr_reward = 0
         # additional info will be stored here and be returned alonge with reward.
         self.info = {}
+        self._reward_composition = {}
         self.robot_radius = robot_radius
         self.goal_radius = goal_radius
         self.last_goal_dist = None
@@ -34,6 +37,8 @@ class RewardCalculator:
         self.safe_dist = safe_dist
         self.collision_tolerance = collision_tolerance
         self._extended_eval = extended_eval
+        
+        self._prior_path_lengths = deque(maxlen=10)
 
         self.kdtree = None
 
@@ -55,6 +60,7 @@ class RewardCalculator:
         self.last_dist_to_path = None
         self.last_action = None
         self.kdtree = None
+        self._prior_path_lengths.clear()
 
     def _reset(self):
         """
@@ -62,6 +68,7 @@ class RewardCalculator:
         """
         self.curr_reward = 0
         self.info = {}
+        self._reward_composition = {}
 
     def get_reward(
         self,
@@ -88,11 +95,12 @@ class RewardCalculator:
         **kwargs
     ):
         self._reward_goal_reached(goal_in_robot_frame)
-        self._reward_safe_dist(laser_scan, punishment=0.25)
+        self._reward_safe_dist(laser_scan, punishment_factor=0.25)
         self._reward_collision(laser_scan)
         self._reward_goal_approached(
             goal_in_robot_frame, reward_factor=0.3, penalty_factor=0.4
         )
+        self.curr_reward = sum(self._reward_composition.values())
 
     def _cal_reward_rule_01(
         self,
@@ -102,12 +110,13 @@ class RewardCalculator:
         **kwargs
     ):
         self._reward_distance_traveled(kwargs["action"], consumption_factor=0.0075)
-        self._reward_goal_reached(goal_in_robot_frame, reward=15)
-        self._reward_safe_dist(laser_scan, punishment=0.25)
-        self._reward_collision(laser_scan, punishment=10)
+        self._reward_goal_reached(goal_in_robot_frame, reward_factor=15)
+        self._reward_safe_dist(laser_scan, punishment_factor=0.25)
+        self._reward_collision(laser_scan, punishment_factor=10)
         self._reward_goal_approached(
             goal_in_robot_frame, reward_factor=0.3, penalty_factor=0.4
         )
+        self.curr_reward = sum(self._reward_composition.values())
 
     def _cal_reward_rule_02(
         self,
@@ -118,12 +127,13 @@ class RewardCalculator:
     ):
         self._reward_distance_traveled(kwargs["action"], consumption_factor=0.0075)
         self._reward_following_global_plan(kwargs["global_plan"], kwargs["robot_pose"])
-        self._reward_goal_reached(goal_in_robot_frame, reward=15)
-        self._reward_safe_dist(laser_scan, punishment=0.25)
-        self._reward_collision(laser_scan, punishment=10)
+        self._reward_goal_reached(goal_in_robot_frame, reward_factor=15)
+        self._reward_safe_dist(laser_scan, punishment_factor=0.25)
+        self._reward_collision(laser_scan, punishment_factor=10)
         self._reward_goal_approached(
             goal_in_robot_frame, reward_factor=0.3, penalty_factor=0.4
         )
+        self.curr_reward = sum(self._reward_composition.values())
 
     def _cal_reward_rule_03(
         self,
@@ -144,12 +154,13 @@ class RewardCalculator:
             )
         else:
             self.last_dist_to_path = None
-        self._reward_goal_reached(goal_in_robot_frame, reward=15)
-        self._reward_safe_dist(laser_scan, punishment=0.25)
-        self._reward_collision(laser_scan, punishment=10)
+        self._reward_goal_reached(goal_in_robot_frame, reward_factor=15)
+        self._reward_safe_dist(laser_scan, punishment_factor=0.25)
+        self._reward_collision(laser_scan, punishment_factor=10)
         self._reward_goal_approached(
             goal_in_robot_frame, reward_factor=0.3, penalty_factor=0.4
         )
+        self.curr_reward = sum(self._reward_composition.values())
 
     def _cal_reward_rule_04(
         self,
@@ -171,12 +182,13 @@ class RewardCalculator:
             )
         else:
             self.last_dist_to_path = None
-        self._reward_goal_reached(goal_in_robot_frame, reward=15)
-        self._reward_safe_dist(laser_scan, punishment=0.25)
-        self._reward_collision(laser_scan, punishment=10)
+        self._reward_goal_reached(goal_in_robot_frame, reward_factor=15)
+        self._reward_safe_dist(laser_scan, punishment_factor=0.25)
+        self._reward_collision(laser_scan, punishment_factor=10)
         self._reward_goal_approached(
             goal_in_robot_frame, reward_factor=0.3, penalty_factor=0.4
         )
+        self.curr_reward = sum(self._reward_composition.values())
 
     def _cal_reward_rule_05(
         self,
@@ -200,33 +212,32 @@ class RewardCalculator:
         else:
             self.last_dist_to_path = None
         # as the agent only gets the subgoal as input, reaching the goal is only necessary for finishing episode
-        self._reward_goal_reached(goal_in_robot_frame, reward=0)
-        self._reward_subgoal_reached(kwargs["subgoal"], reward=3)
-        self._reward_safe_dist(laser_scan, punishment=0.25)
-        self._reward_collision(laser_scan, punishment=15)
-        self._reward_subgoal_approached(
-            kwargs["subgoal"], reward_factor=0.3, penalty_factor=0.4
-        )
-        self._reward_time_consumption(kwargs["episode_steps_passed"])
+        self._reward_goal_reached(goal_in_robot_frame, reward_factor=30)
+        self._reward_goal_approached(goal_in_robot_frame, reward_factor=0.3, penalty_factor=0.4)
+        self._reward_safe_dist(laser_scan, punishment_factor=0.25)
+        self._reward_collision(laser_scan, punishment_factor=15)
+        self._reward_path_length(kwargs["global_plan_length"], reward_factor=1)
+        self._reward_time_consumption(kwargs["episode_steps_passed"], punishment_factor=0.005)
+        rospy.logdebug(self._reward_composition)
+        self.curr_reward = sum(self._reward_composition.values())
     
-    def _reward_time_consumption(self, steps_passed, punishment=0.05):
-        self.curr_reward = steps_passed * -punishment
+    def _reward_time_consumption(self, steps_passed, punishment_factor=0.005):
+        """ punishes the agent if it takes more and more timesteps to reach the goal """
+        reward = 0.01*steps_passed**1.25 * -punishment_factor
+        self._reward_composition["time consumption"] = reward
+        return reward
+    
+    def _reward_path_length(self, current_length, reward_factor=1):
+        if not self._prior_path_lengths:
+            self._prior_path_lengths.append(current_length)
+            return 0
+        reward = (np.mean(self._prior_path_lengths) - current_length) * reward_factor
+        self._reward_composition["path length"] = reward
+        return reward
 
-    def _reward_subgoal_reached(self, subgoal=Tuple[float, float], reward: float = 2.5):
-        """
-        Reward for reaching the goal.
-
-        :param goal_in_robot_frame (Tuple[float,float]): position (rho, theta) of the goal in robot frame (Polar coordinate)
-        :param reward (float, optional): reward amount for reaching. defaults to 15
-        """
-        if subgoal[0] < self.goal_radius + self.robot_radius:
-            self.curr_reward += reward
-            self.info["reached_subgoal"] = True
-        else:
-            self.info["reached_subgoal"] = False
 
     def _reward_goal_reached(
-        self, goal_in_robot_frame=Tuple[float, float], reward: float = 15
+        self, goal_in_robot_frame=Tuple[float, float], reward_factor: float = 15
     ):
         """
         Reward for reaching a given point.
@@ -235,40 +246,15 @@ class RewardCalculator:
         :param reward (float, optional): reward amount for reaching. defaults to 15
         """
         if goal_in_robot_frame[0] < self.goal_radius + self.robot_radius:
-            self.curr_reward += reward
+            reward = reward_factor
             self.info["is_done"] = True
             self.info["done_reason"] = 2
             self.info["is_success"] = 1
         else:
             self.info["is_done"] = False
-
-    def _reward_subgoal_approached(
-        self,
-        subgoal=Tuple[float, float],
-        reward_factor: float = 0.3,
-        penalty_factor: float = 0.5,
-    ):
-        """
-        Reward for approaching the goal.
-
-        :param goal_in_robot_frame (Tuple[float,float]): position (rho, theta) of the goal in robot frame (Polar coordinate)
-        :param reward_factor (float, optional): positive factor for approaching goal. defaults to 0.3
-        :param penalty_factor (float, optional): negative factor for withdrawing from goal. defaults to 0.5
-        """
-        if self.last_subgoal_dist is not None:
-            # goal_in_robot_frame : [rho, theta]
-
-            # higher negative weight when moving away from goal
-            # (to avoid driving unnecessary circles when train in contin. action space)
-            if (self.last_subgoal_dist - subgoal[0]) > 0:
-                w = reward_factor
-            else:
-                w = penalty_factor
-            reward = w * (self.last_subgoal_dist - subgoal[0])
-
-            # print("reward_goal_approached:  {}".format(reward))
-            self.curr_reward += reward
-        self.last_subgoal_dist = subgoal[0]
+            reward = 0
+        self._reward_composition["goal reached"] = reward
+        return reward
         
     def _reward_goal_approached(
         self,
@@ -283,6 +269,7 @@ class RewardCalculator:
         :param reward_factor (float, optional): positive factor for approaching goal. defaults to 0.3
         :param penalty_factor (float, optional): negative factor for withdrawing from goal. defaults to 0.5
         """
+        reward = 0
         if self.last_goal_dist is not None:
             # goal_in_robot_frame : [rho, theta]
 
@@ -294,40 +281,45 @@ class RewardCalculator:
                 w = penalty_factor
             reward = w * (self.last_goal_dist - goal_in_robot_frame[0])
 
-            # print("reward_goal_approached:  {}".format(reward))
-            self.curr_reward += reward
         self.last_goal_dist = goal_in_robot_frame[0]
+        self._reward_composition["goal approached"] = reward
+        return reward
 
-    def _reward_collision(self, laser_scan: np.ndarray, punishment: float = 10):
+    def _reward_collision(self, laser_scan: np.ndarray, punishment_factor: float = 10):
         """
         Reward for colliding with an obstacle.
 
         :param laser_scan (np.ndarray): laser scan data
         :param punishment (float, optional): punishment for collision. defaults to 10
         """
+        reward = 0
         if laser_scan.min() <= self.robot_radius + self.collision_tolerance:
-            self.curr_reward -= punishment
+            reward -= punishment_factor
             self.info["is_done"] = True
             self.info["done_reason"] = 1
             self.info["is_success"] = 0
-            
-            if self._extended_eval: 
-                self.info["crash"] = True
+            self.info["crash"] = True
+        else:
+            self.info["crash"] = False
+        self._reward_composition["collision"] = reward
+        return reward
 
-    def _reward_safe_dist(self, laser_scan: np.ndarray, punishment: float = 0.15):
+
+    def _reward_safe_dist(self, laser_scan: np.ndarray, punishment_factor: float = 0.15):
         """
         Reward for undercutting safe distance.
 
         :param laser_scan (np.ndarray): laser scan data
         :param punishment (float, optional): punishment for undercutting. defaults to 0.15
         """
+        reward = 0
         if laser_scan.min() < self.safe_dist:
-            self.curr_reward -= punishment
+            reward -= punishment_factor
+            self.info["safe_dist"] = True
+        self._reward_composition["safe dist"] = reward
+        return reward
 
-            if self._extended_eval:
-                self.info["safe_dist"] = True
-
-    def _reward_not_moving(self, action: np.ndarray = None, punishment: float = 0.01):
+    def _reward_not_moving(self, action: np.ndarray = None, punishment_factor: float = 0.01):
         """
         Reward for not moving. Only applies half of the punishment amount
         when angular velocity is larger than zero.
@@ -335,8 +327,11 @@ class RewardCalculator:
         :param action (np.ndarray (,2)): [0] - linear velocity, [1] - angular velocity
         :param punishment (float, optional): punishment for not moving. defaults to 0.01
         """
+        reward = 0
         if action is not None and action[0] == 0.0:
-            self.curr_reward -= punishment if action[1] == 0.0 else punishment / 2
+            reward -= punishment_factor if action[1] == 0.0 else punishment_factor / 2
+        self._reward_composition["not moving"] = reward
+        return reward
 
     def _reward_distance_traveled(
         self,
@@ -351,13 +346,15 @@ class RewardCalculator:
         :param punishment (float, optional): punishment when action can't be retrieved. defaults to 0.01
         :param consumption_factor (float, optional): weighted velocity punishment. defaults to 0.01
         """
+        reward = 0
         if action is None:
-            self.curr_reward -= punishment
+            reward -= punishment
         else:
             lin_vel = action[0]
             ang_vel = action[1]
-            reward = (lin_vel + (ang_vel * 0.001)) * consumption_factor
-        self.curr_reward -= reward
+            reward += (lin_vel + (ang_vel * 0.001)) * consumption_factor
+        self._reward_composition["distance traveled"] = reward
+        return reward
 
     def _reward_distance_global_plan(
         self,
@@ -375,6 +372,7 @@ class RewardCalculator:
         :param reward_factor (float, optional): positive factor when approaching global plan. defaults to 0.1
         :param penalty_factor (float, optional): negative factor when veering away from global plan. defaults to 0.15
         """
+        reward = 0
         if global_plan is not None and len(global_plan) != 0:
             curr_dist_to_path, idx = self.get_min_dist2global_kdtree(
                 global_plan, robot_pose
@@ -386,8 +384,10 @@ class RewardCalculator:
                 else:
                     w = penalty_factor
 
-                self.curr_reward += w * (self.last_dist_to_path - curr_dist_to_path)
+                reward = w * (self.last_dist_to_path - curr_dist_to_path)
             self.last_dist_to_path = curr_dist_to_path
+        self._reward_composition["distance global plan"] = reward
+        return reward
 
     def _reward_following_global_plan(
         self,
@@ -404,13 +404,16 @@ class RewardCalculator:
         :param action (np.ndarray (,2)): [0] = linear velocity, [1] = angular velocity
         :param dist_to_path (float, optional): applies reward within this distance
         """
+        reward = 0
         if global_plan is not None and len(global_plan) != 0 and action is not None:
             curr_dist_to_path, idx = self.get_min_dist2global_kdtree(
                 global_plan, robot_pose
             )
 
             if curr_dist_to_path <= dist_to_path:
-                self.curr_reward += 0.1 * action[0]
+                reward = 0.1 * action[0]
+        self._reward_composition["following global plan"] = reward
+        return reward
 
     def get_min_dist2global_kdtree(self, global_plan: np.array, robot_pose: Pose2D):
         """
@@ -431,10 +434,13 @@ class RewardCalculator:
 
         :param action: (np.ndarray (,2)): [0] = linear velocity, [1] = angular velocity
         """
+        reward = 0
         if self.last_action is not None:
             curr_ang_vel = action[1]
             last_ang_vel = self.last_action[1]
 
             vel_diff = abs(curr_ang_vel - last_ang_vel)
-            self.curr_reward -= (vel_diff ** 4) / 2500
+            reward = -(vel_diff ** 4) / 2500
         self.last_action = action
+        self._reward_composition["abrupt direction change"] = reward
+        return reward

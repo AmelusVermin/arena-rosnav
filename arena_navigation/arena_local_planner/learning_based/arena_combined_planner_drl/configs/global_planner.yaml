@@ -58,7 +58,7 @@ global_costmap:
     raytrace_range: 5 # default 3.0
 
     # Obstacle Costmap Plugin parameters
-    track_unknown_space: false # default false
+    track_unknown_space: true # default false
     footprint_clearing_enabled: true # default true
     combination_method: 1 # default 1
     

@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.core.numeric import indices
 import rospy
 import message_filters
 from typing import Tuple
@@ -20,19 +21,16 @@ class Observer():
         self.ns_prefix = "" if (ns == "" or ns is None) else f"/{ns}/"
   
         # define agent observation space, only for the agent itself!, it's used to define the input for the neural networks
-        self.observation_space = Observer._stack_spaces(
-            (
-                # lidar scan
-                spaces.Box(low=0, high=args.lidar_range, shape=(args.num_lidar_beams,), dtype=np.float32),
-                # distance to (sub)goal
-                spaces.Box(low=0, high=10, shape=(1,), dtype=np.float32),
-                # rotation angle to (sub)goal
-                spaces.Box(low=-np.pi, high=np.pi, shape=(1,), dtype=np.float32),
-            )
-        )
-
-        # define observation variables
+        self._observation_space_type = args.observation_space_type
+        self._num_global_plan_points = args.num_global_plan_points
+        self._gp_point_skip_rate = args.gp_point_skip_rate
         self._num_lidar_beams = args.num_lidar_beams
+        self._lidar_range = args.lidar_range
+        self._max_distance_goal = args.max_distance_goal
+        self.observation_space = self._prepare_observation_space(args)
+        
+        # define observation variables
+        
         self._last_scan = None#LaserScan()
         self._scan_deque = deque(maxlen=args.max_deque_size)
         self._last_odom = None#Odometry()
@@ -61,6 +59,54 @@ class Observer():
         # global goal
         self._goal_sub = message_filters.Subscriber(f"{self.ns_prefix}goal", PoseStamped)
         self._goal_sub.registerCallback(self._goal_callback)
+
+    def _prepare_observation_space(self, args):
+        
+        # lidar scan
+        scan = (spaces.Box(low=0, high=self._lidar_range, shape=(self._num_lidar_beams,), dtype=np.float32),)
+        
+        # used for any points as obs such as goal (distance and rotation to that point)
+        point = (
+            # distance to goal
+            spaces.Box(low=0, high=self._max_distance_goal, shape=(1,), dtype=np.float32),
+            # rotation angle to goal
+            spaces.Box(low=-np.pi, high=np.pi, shape=(1,), dtype=np.float32)
+        )
+
+        # length of the global path
+        global_plan_length = (spaces.Box(low=0, high=self._max_distance_goal**2, shape=(1,), dtype=np.float32),)
+
+        # given number of points from global path
+        global_plan_path = point * self._num_global_plan_points
+
+        if self._observation_space_type == "FULL_LENGTH":
+            observation_space = Observer._stack_spaces(
+                scan + point + point + global_plan_length
+            )
+        elif self._observation_space_type == "FULL_PATH":
+            observation_space = Observer._stack_spaces(
+                scan + point + point + global_plan_path
+            )
+        elif self._observation_space_type == "BASE":
+            observation_space = Observer._stack_spaces(
+                scan + point
+            )
+        elif self._observation_space_type == "SUBGOAL":
+            observation_space = Observer._stack_spaces(
+                scan + point + point
+            )
+        elif self._observation_space_type == "GLOBAL_LENGTH":
+            observation_space = Observer._stack_spaces(
+                scan + point + global_plan_length
+            )
+        elif self._observation_space_type == "GLOBAL_PATH":
+            observation_space = Observer._stack_spaces(
+                scan + point + global_plan_path
+            )
+        else:
+            raise ValueError(f"observation_space: {self._observation_space_type} not known!")
+        
+        return observation_space
 
     def get_agent_observation_space(self):
         """ just returns the observation space for the agent only """
@@ -144,18 +190,57 @@ class Observer():
                 break
         return synced_scan_msg, synced_odom_msg
 
-    def prepare_agent_observation(self, scan, subgoal, robot_pose2D):
+    def prepare_agent_observation(self, robot_pose_2D, scan, goal, subgoal, global_plan_poses, global_plan_length):
         """ converts important information into the agent observation according to the observation space """
         # convert lidar scan to np array with appropriate data type
         if len(scan.ranges) > 0:
-            raw_scan = scan.ranges.astype(np.float32)
+            scan_obs = scan.ranges.astype(np.float32)
         else:
-            raw_scan = np.zeros(self._num_lidar_beams, dtype=float)
+            scan_obs = np.zeros(self._num_lidar_beams, dtype=float)
         # calculate difference between subgoal and robotpose to have an relative measurement for the agent
-        subgoal_2D = pose3D_to_pose2D(subgoal)
-        rho, theta = get_pose_difference(subgoal_2D, robot_pose2D)
-        # create observation according to observation space
-        return np.hstack([raw_scan, np.array([rho]), np.array([theta])])
+        goal_2D = pose3D_to_pose2D(goal)
+        goal_obs = np.array(get_pose_difference(goal_2D, robot_pose_2D))
+
+        # prepare subgoal observation
+        if self._observation_space_type in ["FULL_LENGTH", "FULL_PATH", "SUBGOAL"]:
+            subgoal_2D = pose3D_to_pose2D(subgoal)
+            subgoal_obs = np.array(get_pose_difference(subgoal_2D, robot_pose_2D))
+
+        # prepare global plan length observation
+        if self._observation_space_type in ["FULL_LENGTH", "GLOBAL_LENGTH"]:
+            length_obs = [global_plan_length]
+        
+        # prepare global plan path observation
+        if self._observation_space_type in ["FULL_PATH", "GLOBAL_PATH"]:
+            points = []
+            rho, theta = 0.0, 0.0
+            for i in range(0, self._num_global_plan_points * self._gp_point_skip_rate, self._gp_point_skip_rate):
+                if i < len(global_plan_poses):
+                    point_2D = pose3D_to_pose2D(global_plan_poses[i].pose)
+                    rho, theta = get_pose_difference(point_2D, robot_pose_2D)
+                points.append(rho)
+                points.append(theta)
+            gp_points_obs = np.array(points)
+
+        # create agent observation according to observation_space_type
+        if self._observation_space_type == "FULL_LENGTH":
+            observation = np.hstack([scan_obs, goal_obs, subgoal_obs, length_obs])
+        elif self._observation_space_type == "FULL_PATH":
+            observation = np.hstack([scan_obs, goal_obs, subgoal_obs, gp_points_obs])
+        elif self._observation_space_type == "BASE":
+            observation = np.hstack([scan_obs, goal_obs])
+        elif self._observation_space_type == "SUBGOAL":
+            observation = np.hstack([scan_obs, goal_obs, subgoal_obs])
+        elif self._observation_space_type == "GLOBAL_LENGTH":
+            observation = np.hstack([scan_obs, goal_obs, length_obs])
+        elif self._observation_space_type == "GLOBAL_PATH":
+            observation = np.hstack([scan_obs, goal_obs, gp_points_obs])
+        else:
+            raise ValueError(f"observation_space: {self.observation_space} not known!")
+        
+        return observation
+    
+    
 
     def process_scan_msg(self, msg_LaserScan: LaserScan):
         """ remove_nans_from_scan """

@@ -27,3 +27,5 @@ def pose3D_to_pose2D(pose3d):
         pose2d.theta = yaw
         return pose2d
 
+def get_path_length(path: np.array):
+    return np.sum(np.sqrt(np.sum(np.diff(path, axis=0)**2, axis=1)))

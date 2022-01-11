@@ -108,8 +108,9 @@ def main():
             [
                 make_envs(args, ns_for_nodes, i, global_planner, mid_planner, save_paths)
                 for i in range(args.n_envs)
+                
             ],
-            start_method="fork",
+            start_method="fork"
         )
     else:
         env = DummyVecEnv(
@@ -119,6 +120,7 @@ def main():
             ]
         )
 
+    time.sleep((args.n_envs) * 7)
     # instantiate eval environment
     # take task_manager from first sim (currently evaluation only provided for single process)
     if ns_for_nodes:
@@ -127,7 +129,8 @@ def main():
         )
     else:
         eval_env = env
-    
+        
+    time.sleep(7)
     env, eval_env = load_vec_normalize(args, save_paths, env, eval_env)
 
     # stop training on reward threshold callback
@@ -166,7 +169,7 @@ def main():
     # start tensorboard
     command = ['tensorboard', f"--logdir={save_paths['tensorboard']}", "--port=6006"]
     tensorboard_process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, preexec_fn=set_pdeathsig(signal.SIGTERM))       
-    time.sleep((args.n_envs + 1) * 2)
+    
     # track training time
     rospy.loginfo("start training")
     start = time.time() 

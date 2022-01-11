@@ -14,7 +14,7 @@ environment:
   # default: "configs/training_curriculum.yaml"
   task_curriculum_path: "configs/training_curriculum.yaml"
   # the goal is reached when the robot enters the circle determined by this radius around the goal, the orientation is ignored
-  goal_radius: 0.315
+  goal_radius: 0.3075
   reward_fnc: "rule_05"
   # a tolerance value that is used for collision checks. If the robot gets closer to an obstacle than this tolerance, a collsion will be detected. scan.min <= robot_radius + collision_tolerance.
   collision_tolerance: 0 
@@ -23,16 +23,16 @@ environment:
   task_curr_stage: 1
   safe_dist: null
   extended_eval: True
-  train_max_steps_per_episode: 1024
+  train_max_steps_per_episode: 64
   # unused, only set for compatability issues with hyperparameter.json
-  eval_max_steps_per_episode: 1024
+  eval_max_steps_per_episode: 64
   use_first_synced_obs: True
   max_deque_size: 10
   sync_slop: 0.05
   # interval in steps when the planners are called. 
   # 1 = every step, 2 = every 2 steps the planner is called and the global_plan/subgoal gets updated
-  #global_planner_call_interval: 8
-  #mid_planner_call_interval: 8
+  global_planner_call_interval: 1
+  mid_planner_call_interval: 1
   #map_update_frequency: 20 
 
 training:
@@ -49,7 +49,7 @@ training:
   max_grad_norm: 0.5
   gae_lambda: 0.95
   # number of envrionments run in parallel should be a multiple of mini_batch_size for recurrent policies
-  mini_batch_size: 8 
+  mini_batch_size: 1
   n_epochs: 4
   clip_range: 0.22
   normalize: True
@@ -69,6 +69,12 @@ model:
   # string: agent_type that shall be created like CUSTOM_MLP, or AGENT_6, use command line option --show_registered_types or -srt
   # is ignored if model_path is true
   agent_type: "CUSTOM_MLP_LN_LSTM" #"CUSTOM_MLP"
+  # determines used observation space: available "FULL_LENGTH" (goal, subgoal, global plan length, scan), "FULL_PATH" (goal, subgoal, global plan path, scan), "MIN" (goal, scan), 
+  #  "SUBGOAL" (goal, subgoal, scan), "GLOBAL_LENGTH" (goal, global plan length, scan), "GLOBAL_PATH" (goal, global plan path, scan)
+  observation_space_type: "FULL_PATH" 
+  num_global_plan_points: 50
+  gp_point_skip_rate: 4
+
 trainstage:
   ## settings related to creating TrainStage callback
   # type can be either 'succ' or 'rew'
@@ -80,9 +86,9 @@ evaluation:
   ## settings related to creating evaluation callback
   model_save_dir: "models/trained/"
   # n_eval_episodes: number of episodes to evaluate agent on
-  n_eval_episodes: 4
+  n_eval_episodes: 1
   # eval_freq: evaluate the agent every eval_freq train timesteps
-  eval_freq: 20480
+  eval_freq: 128
   deterministic: True
 stoptraining:
   ## settings related to creating stop training callback
