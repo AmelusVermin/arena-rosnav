@@ -99,7 +99,6 @@ class InitiateNewTrainStage(BaseCallback):
         assert isinstance(
             EvalObject, EvalCallback
         ), f"InitiateNewTrainStage must be called within EvalCallback"
-
         if self.activated:
             if EvalObject.n_eval_episodes < 20:
                 warnings.warn(
@@ -107,7 +106,6 @@ class InitiateNewTrainStage(BaseCallback):
                     "results might not represent agent performance well"
                     % EvalObject.n_eval_episodes
                 )
-
             if (
                 self.threshhold_type == "rew"
                 and EvalObject.best_mean_reward <= self.lower_threshold
@@ -119,7 +117,6 @@ class InitiateNewTrainStage(BaseCallback):
                     pub.publish(self._trigger)
                     if i == 0:
                         self.log_curr_stage(EvalObject)
-
             if (
                 self.threshhold_type == "rew"
                 and EvalObject.best_mean_reward >= self.upper_threshold
@@ -248,7 +245,6 @@ class EvalCallback(EventCallback):
         self.callback_on_eval_end = callback_on_eval_end
         self.eval_calls = 0
         self.reached_subgoal = False
-
         # Convert to VecEnv for consistency
         if not isinstance(eval_env, VecEnv):
             eval_env = DummyVecEnv([lambda: eval_env])
@@ -376,14 +372,13 @@ class EvalCallback(EventCallback):
                 self.best_mean_reward = mean_reward
                 new_best = True
 
+            if self.callback_on_eval_end is not None:
+                self.callback_on_eval_end._on_step(self)
+
             if new_best:        
             # Trigger callback if needed
                 if self.callback is not None:
                     return self._on_event()
-
-            if self.callback_on_eval_end is not None:
-                    self.callback_on_eval_end._on_step(self)
-
             
             
         #self.logger.dumpkvs()

@@ -208,6 +208,7 @@ class StagedRandomTask(RandomTask):
         self._initiate_stage()
 
     def next_stage(self, msg: Bool):
+        print("next stage")
         if self._curr_stage < len(self._stages):
             self._curr_stage = self._curr_stage + 1
             self._initiate_stage()

@@ -8,8 +8,6 @@ import rospy
 import time
 import yaml
 import json
-import signal
-import ctypes
 from typing import Union
 from stable_baselines.bench import Monitor
 #from stable_baselines.common.utils import set_random_seed
@@ -201,10 +199,26 @@ def make_envs(
             #paths['map_parameters'] = os.path.join(paths['map_folder'], "indoor_obs15.json")
             #seed = random.randint(1,1000)
             env = Monitor(
-                FlatlandEnv(eval_ns, args, paths, global_planner, mid_planner),
+                FlatlandEnv(eval_ns, args, paths, global_planner, mid_planner, train_mode=False, evaluation=True),
                 paths['training'],
-                info_keywords=("done_reason", "is_success", "crash", "safe_dist"),
-            )
+                info_keywords=(
+                    "done_reason", 
+                    "is_success", 
+                    "crash", 
+                    "safe_dist", 
+                    "time consumption",
+                    "path length",
+                    "goal reached",
+                    "goal approached",
+                    "collision",
+                    "safe dist",
+                    "not moving",
+                    "distance traveled",
+                    "distance global plan",
+                    "following global plan",
+                    "abrupt direction change" 
+                    )
+                )
         return env
     return _init
 
@@ -256,9 +270,3 @@ def load_vec_normalize(args: argparse.Namespace, save_paths: dict, env: VecEnv, 
             )
         return env, eval_env
 
-def set_pdeathsig(sig = signal.SIGTERM):
-    """ Used for sending signals to subprocess when parent process dies. (used as parameter in Popen) """
-    libc = ctypes.CDLL("libc.so.6")
-    def callable():
-        return libc.prctl(1, sig)
-    return callable

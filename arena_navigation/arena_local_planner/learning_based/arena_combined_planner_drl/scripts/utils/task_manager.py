@@ -25,7 +25,7 @@ class TaskManager:
         self.ns = ns
         self.paths = paths
         self.run_scenario = run_scenario
-        self.last_stage = 0
+        self.last_stage = 1
         if self.run_scenario:
             self.task = get_predefined_task(ns, mode='scenario', start_stage=1, PATHS=paths)
         else:
@@ -105,6 +105,8 @@ class TaskManager:
                         map_params[curr_stage]["map_width"])
         rospy.set_param(f"/{self.ns}/map_generator_node/resolution", 
                         map_params[curr_stage]["map_resolution"])
+        rospy.set_param(f"/{self.ns}/map_generator_node/map_type",
+                        map_params[curr_stage]["map_type"])
 
         # indoor map parameter
         rospy.set_param(f"/{self.ns}/map_generator_node/corridor_radius", 
@@ -132,6 +134,10 @@ class TaskManager:
     def _update_map(self, seed: int):
         # update map parameters when stage has changed
         curr_stage = rospy.get_param("/curr_stage")
+        rospy.logdebug(f"{self.ns}: update map in stage {curr_stage}!")
+        while not isinstance(curr_stage, int):
+            curr_stage = rospy.get_param("/curr_stage")
+
         if self.last_stage != curr_stage:
             self.last_stage = curr_stage
             self._update_map_parameters(curr_stage)

@@ -38,7 +38,7 @@
 3:
   static: 4
   dynamic: 4
-  map_type: "indoor"
+  map_type: "outdoor"
   map_height: 150
   map_width: 150
   map_resolution: 0.11
@@ -54,7 +54,7 @@
 4:
   static: 8
   dynamic: 8
-  map_type: "indoor"
+  map_type: "outdoor"
   map_height: 150
   map_width: 150
   map_resolution: 0.11
@@ -70,7 +70,7 @@
 5:
   static: 12
   dynamic: 12
-  map_type: "indoor"
+  map_type: "outdoor"
   map_height: 150
   map_width: 150
   map_resolution: 0.11

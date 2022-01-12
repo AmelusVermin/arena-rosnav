@@ -21,7 +21,7 @@ class MapGenerator:
         # initialize occupancy grid
         self.occupancy_grid = OccupancyGrid()
         self.ns = rospy.get_param("~ns")
-        self.map_type = rospy.get_param("~map_type")
+        
         self.indoor_prob = rospy.get_param("~indoor_prob")
         
         # self.generate_initial_map() # initial random map generation (before first episode)
@@ -108,7 +108,7 @@ class MapGenerator:
         self.height = rospy.get_param("~height")
         self.width = rospy.get_param("~width")
         self.resolution = rospy.get_param("~resolution")
-
+        self.map_type = rospy.get_param("~map_type")
         # indoor map parameter
         self.corridor_radius = rospy.get_param("~corridor_radius")
         self.iterations = rospy.get_param("~iterations")
@@ -120,6 +120,8 @@ class MapGenerator:
         # outdoor map parameter
         self.obstacle_number = rospy.get_param("~obstacle_number")
         self.obstacle_extra_radius = rospy.get_param("~obstacle_extra_radius")
+
+        
 
 
 if __name__ == '__main__':

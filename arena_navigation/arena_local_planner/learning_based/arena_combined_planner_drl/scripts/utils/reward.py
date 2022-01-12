@@ -68,7 +68,19 @@ class RewardCalculator:
         """
         self.curr_reward = 0
         self.info = {}
-        self._reward_composition = {}
+        self._reward_composition = {
+            "time consumption" : 0,
+            "path length" : 0,
+            "goal reached" : 0,
+            "goal approached" : 0,
+            "collision" : 0,
+            "safe dist" : 0,
+            "not moving" : 0,
+            "distance traveled" : 0,
+            "distance global plan" : 0,
+            "following global plan" : 0,
+            "abrupt direction change" : 0
+        }
 
     def get_reward(
         self,
@@ -85,7 +97,7 @@ class RewardCalculator:
         """
         self._reset()
         self.cal_func(self, laser_scan, goal_in_robot_frame, *args, **kwargs)
-        return self.curr_reward, self.info
+        return self.curr_reward, self.info, self._reward_composition
 
     def _cal_reward_rule_00(
         self,

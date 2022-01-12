@@ -23,7 +23,7 @@ environment:
   task_curr_stage: 1
   safe_dist: null
   extended_eval: True
-  train_max_steps_per_episode: 64
+  train_max_steps_per_episode: 1024
   # unused, only set for compatability issues with hyperparameter.json
   eval_max_steps_per_episode: 64
   use_first_synced_obs: True
@@ -81,8 +81,8 @@ trainstage:
   ## settings related to creating TrainStage callback
   # type can be either 'succ' or 'rew'
   stage_threshold_type: "succ"
-  stage_upper_thres: 0.85
-  stage_lower_thres: 0.6
+  stage_upper_thres: 0.001
+  stage_lower_thres: 0.0
   stage_verbose: 1
 evaluation:
   ## settings related to creating evaluation callback

@@ -96,6 +96,19 @@ class FlatlandEnv(gym.Env):
             collision_tolerance=args.collision_tolerance,
             extended_eval=self._extended_eval,
         )
+        self._reward_composition = {
+            "time consumption" : 0,
+            "path length" : 0,
+            "goal reached" : 0,
+            "goal approached" : 0,
+            "collision" : 0,
+            "safe dist" : 0,
+            "not moving" : 0,
+            "distance traveled" : 0,
+            "distance global plan" : 0,
+            "following global plan" : 0,
+            "abrupt direction change" : 0
+        }
 
         # create task 
         self._task_manager = TaskManager(self.ns, paths, False, args.task_curr_stage)
@@ -124,8 +137,8 @@ class FlatlandEnv(gym.Env):
         if self._is_sim_in_train_mode:
             while not (self._global_planner.is_ready() and self._mid_planner.is_ready()): 
                 self._call_service_takeSimStep(self._action_frequency)
-        rospy.logdebug(f"{self.ns}: initialization finished!")
-        print(time.perf_counter() - t1)
+        rospy.logdebug(f"{self.ns}: initialization finished in {time.perf_counter() - t1}sec!")
+        
 
     def _pub_agent_action(self, action):
         """ publishes the agent action for the flatland sim """
@@ -194,7 +207,7 @@ class FlatlandEnv(gym.Env):
         subgoal_tup = get_pose_difference(pose3D_to_pose2D(self._last_subgoal.pose), robot_pose_2D)
         # calculate reward
         rospy.logdebug(f"ns:{self.ns}, get reward")
-        reward, reward_info = self.reward_calculator.get_reward(
+        reward, reward_info, reward_composition = self.reward_calculator.get_reward(
             observation[:self._num_lidar_beams],
             goal_tup,
             action=action,
@@ -204,6 +217,9 @@ class FlatlandEnv(gym.Env):
             global_plan_length=global_plan_length,
             episode_steps_passed=self._steps_curr_episode
         )
+
+        for k, v in reward_composition.items():
+            self._reward_composition[k] += v
 
         rospy.logdebug(f"cum_reward: {reward}")
 
@@ -227,7 +243,7 @@ class FlatlandEnv(gym.Env):
                 info["done_reason"] = 0
                 info["is_success"] = 0
         
-
+        info = {**info, **self._reward_composition}
         self._steps_curr_episode += 1
         rospy.logdebug(f"ns:{self.ns}, end of step, reward: {reward}, done: {done}, info: {info}")
         return observation, reward, done, info
@@ -247,12 +263,26 @@ class FlatlandEnv(gym.Env):
 
         # reset task manager
         if self._evaluation:
-            seed = (self._current_eval_iteration % self._evaluation_episodes) * self._seed
+            seed = (self._curr_episode % self._max_eval_steps_per_episode) * self._seed
         else:
             seed = random.randint(0, 1000000)
         self._task_manager.reset(seed)
         
         self.reward_calculator.reset()
+        self._reward_composition = {
+            "time consumption" : 0,
+            "path length" : 0,
+            "goal reached" : 0,
+            "goal approached" : 0,
+            "collision" : 0,
+            "safe dist" : 0,
+            "not moving" : 0,
+            "distance traveled" : 0,
+            "distance global plan" : 0,
+            "following global plan" : 0,
+            "abrupt direction change" : 0
+        }
+
         self._steps_curr_episode = 0
         self._curr_episode += 1
         
