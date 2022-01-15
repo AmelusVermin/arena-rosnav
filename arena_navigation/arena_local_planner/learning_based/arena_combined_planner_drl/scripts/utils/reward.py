@@ -209,8 +209,8 @@ class RewardCalculator:
         *args,
         **kwargs
     ):
-        self._reward_distance_traveled(kwargs["action"], consumption_factor=0.0075)
-        self._reward_abrupt_direction_change(kwargs["action"])
+        self._reward_distance_traveled(kwargs["action"], consumption_factor=0.05)
+        self._reward_abrupt_direction_change(kwargs["action"], punishment_weight=800)
         self._reward_following_global_plan(
             kwargs["global_plan"], kwargs["robot_pose"], kwargs["action"]
         )
@@ -228,7 +228,7 @@ class RewardCalculator:
         self._reward_goal_approached(goal_in_robot_frame, reward_factor=0.3, penalty_factor=0.4)
         self._reward_safe_dist(laser_scan, punishment_factor=0.25)
         self._reward_collision(laser_scan, punishment_factor=15)
-        self._reward_path_length(kwargs["global_plan_length"], reward_factor=1)
+        self._reward_path_length(kwargs["global_plan_length"], reward_factor=0.01)
         self._reward_time_consumption(kwargs["episode_steps_passed"], punishment_factor=0.005)
         rospy.logdebug(self._reward_composition)
         self.curr_reward = sum(self._reward_composition.values())
@@ -440,7 +440,7 @@ class RewardCalculator:
         dist, index = self.kdtree.query([robot_pose.x, robot_pose.y])
         return dist, index
 
-    def _reward_abrupt_direction_change(self, action: np.array = None):
+    def _reward_abrupt_direction_change(self, action: np.array = None, punishment_weight=2500):
         """
         Applies a penalty when an abrupt change of direction occured.
 
@@ -452,7 +452,7 @@ class RewardCalculator:
             last_ang_vel = self.last_action[1]
 
             vel_diff = abs(curr_ang_vel - last_ang_vel)
-            reward = -(vel_diff ** 4) / 2500
+            reward = -(vel_diff ** 4) / punishment_weight
         self.last_action = action
         self._reward_composition["abrupt direction change"] = reward
         return reward

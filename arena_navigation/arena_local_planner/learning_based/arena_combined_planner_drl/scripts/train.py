@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from random import seed
 import rospy
 import time
 import os

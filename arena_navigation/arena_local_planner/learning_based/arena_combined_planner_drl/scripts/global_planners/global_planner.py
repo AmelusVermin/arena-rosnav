@@ -1,6 +1,6 @@
-from os import POSIX_FADV_NOREUSE
-import numpy as np
 import nav_msgs
+from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 from abc import ABC, abstractmethod
 
 class GlobalPlanner(ABC):
@@ -14,7 +14,7 @@ class GlobalPlanner(ABC):
         pass
 
     @abstractmethod
-    def get_global_plan(self, goal, odom) -> nav_msgs.msg.Path:
+    def get_global_plan(self, goal: PoseStamped, odom: Odometry) -> nav_msgs.msg.Path:
         pass
 
     @abstractmethod

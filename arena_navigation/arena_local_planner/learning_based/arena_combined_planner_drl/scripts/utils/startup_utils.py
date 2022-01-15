@@ -170,7 +170,7 @@ def make_envs(
     global_planner,
     mid_planner,
     paths: dict,
-    train: bool = True,
+    train: bool = True
     
 ):
     """

@@ -296,6 +296,24 @@ class EvalCallback(EventCallback):
             if maybe_is_success is not None:
                 self._is_success_buffer.append(maybe_is_success)
         
+            self._buffer_info_value(info, "time consumption", self._rw_time_consumption)
+            self._buffer_info_value(info, "path length", self._rw_path_length)
+            self._buffer_info_value(info, "goal reached", self._rw_goal_reached)
+            self._buffer_info_value(info, "goal approached", self._rw_goal_approached)
+            self._buffer_info_value(info, "collision", self._rw_collision)
+            self._buffer_info_value(info, "safe dist", self._rw_safe_dist)
+            self._buffer_info_value(info, "not moving", self._rw_not_moving)
+            self._buffer_info_value(info, "distance traveled", self._rw_distance_traveled)
+            self._buffer_info_value(info, "distance global plan", self._rw_distance_global_plan)
+            self._buffer_info_value(info, "following global plan", self._rw_following_global_plan)
+            self._buffer_info_value(info, "abrupt direction change", self._rw_abrupt_direction_change)
+
+
+    def _buffer_info_value(self, info: dict, key: str, buffer: list):
+        val = info.get(key)
+        if val is not None:
+            buffer.append(val)
+        
     def _on_step(self) -> bool:
         if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0:
             new_best = False
@@ -305,6 +323,17 @@ class EvalCallback(EventCallback):
 
             # Reset success rate buffer
             self._is_success_buffer = []
+            self._rw_time_consumption = []
+            self._rw_path_length = []
+            self._rw_goal_reached = []
+            self._rw_goal_approached = []
+            self._rw_collision = []
+            self._rw_safe_dist = []
+            self._rw_not_moving = []
+            self._rw_distance_traveled = []
+            self._rw_distance_global_plan = []
+            self._rw_following_global_plan = []
+            self._rw_abrupt_direction_change = []
 
             episode_rewards, episode_lengths = evaluate_policy(
                 self.model,
@@ -337,20 +366,77 @@ class EvalCallback(EventCallback):
 
             mean_reward, std_reward = np.mean(episode_rewards), np.std(episode_rewards)
             mean_ep_length, std_ep_length = np.mean(episode_lengths), np.std(episode_lengths)
+
+            mean_rw_time_consumption = np.mean(self._rw_time_consumption) if self._rw_time_consumption else 0
+            mean_rw_path_length = np.mean(self._rw_path_length) if self._rw_path_length else 0
+            mean_rw_goal_reached = np.mean(self._rw_goal_reached) if self._rw_goal_reached else 0
+            mean_rw_goal_approached = np.mean(self._rw_goal_approached) if self._rw_goal_approached else 0
+            mean_rw_collision = np.mean(self._rw_collision) if self._rw_collision else 0
+            mean_rw_safe_dist = np.mean(self._rw_safe_dist) if self._rw_safe_dist else 0
+            mean_rw_not_moving = np.mean(self._rw_not_moving) if self._rw_not_moving else 0
+            mean_rw_distance_traveled = np.mean(self._rw_distance_traveled) if self._rw_distance_traveled else 0
+            mean_rw_distance_global_plan = np.mean(self._rw_distance_global_plan) if self._rw_distance_global_plan else 0
+            mean_rw_following_global_plan = np.mean(self._rw_following_global_plan) if self._rw_following_global_plan else 0
+            mean_rw_abrupt_direction_change = np.mean(self._rw_abrupt_direction_change) if self._rw_abrupt_direction_change else 0
             self.last_mean_reward = mean_reward
 
             if self.verbose > 0:
                 print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward={mean_reward:.2f} +/- {std_reward:.2f}")
                 print(f"Episode length: {mean_ep_length:.2f} +/- {std_ep_length:.2f}")
             # Add to current Logger
-            self.tb_log_value("eval_x=trainsteps/mean_reward", float(mean_reward), self.num_timesteps)
-            self.tb_log_value("eval_x=trainsteps/mean_ep_length", mean_ep_length, self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps/mean_reward", 
+                float(mean_reward), self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps/mean_ep_length", 
+                mean_ep_length, self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps_rw_comp/time_consumption", 
+                mean_rw_time_consumption, self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps_rw_comp/path_length", 
+                mean_rw_path_length, self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps_rw_comp/goal_reached", 
+                mean_rw_goal_reached, self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps_rw_comp/goal_approached", 
+                mean_rw_goal_approached, self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps_rw_comp/collision", 
+                mean_rw_collision, self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps_rw_comp/safe_dist", 
+                mean_rw_safe_dist, self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps_rw_comp/not_moving", 
+                mean_rw_not_moving, self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps_rw_comp/distance_traveled", 
+                mean_rw_distance_traveled, self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps_rw_comp/distance_global_plan", 
+                mean_rw_distance_global_plan, self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps_rw_comp/following_global_plan", 
+                mean_rw_following_global_plan, self.num_timesteps)
+            self.tb_log_value("eval_x=trainsteps_rw_comp/abrupt_direction_change", 
+                mean_rw_abrupt_direction_change, self.num_timesteps)
 
-            self.tb_log_value("eval_x=evalcalls/mean_reward", float(mean_reward), self.eval_calls)
-            self.tb_log_value("eval_x=evalcalls/mean_ep_length", mean_ep_length, self.eval_calls)
-            
-            #self.logger.logkv("eval/mean_reward", float(mean_reward))
-            #self.logger.logkv("eval/mean_ep_length", mean_ep_length)
+            self.tb_log_value("eval_x=evalcalls/mean_reward", 
+                    float(mean_reward), self.eval_calls)
+            self.tb_log_value("eval_x=evalcalls/mean_ep_length", 
+                    mean_ep_length, self.eval_calls)
+            self.tb_log_value("eval_x=evalcalls_rw_comp/time_consumption", 
+                    mean_rw_time_consumption, self.eval_calls)
+            self.tb_log_value("eval_x=evalcalls_rw_comp/path_length", 
+                    mean_rw_path_length, self.eval_calls)
+            self.tb_log_value("eval_x=evalcalls_rw_comp/goal_reached", 
+                    mean_rw_goal_reached, self.eval_calls)
+            self.tb_log_value("eval_x=evalcalls_rw_comp/goal_approached", 
+                    mean_rw_goal_approached, self.eval_calls)
+            self.tb_log_value("eval_x=evalcalls_rw_comp/collision", 
+                    mean_rw_collision, self.eval_calls)
+            self.tb_log_value("eval_x=evalcalls_rw_comp/safe_dist", 
+                    mean_rw_safe_dist, self.eval_calls)
+            self.tb_log_value("eval_x=evalcalls_rw_comp/not_moving", 
+                    mean_rw_not_moving, self.eval_calls)
+            self.tb_log_value("eval_x=evalcalls_rw_comp/distance_traveled", 
+                    mean_rw_distance_traveled, self.eval_calls)
+            self.tb_log_value("eval_x=evalcalls_rw_comp/distance_global_plan", 
+                    mean_rw_distance_global_plan, self.eval_calls)
+            self.tb_log_value("eval_x=evalcalls_rw_comp/following_global_plan", 
+                    mean_rw_following_global_plan, self.eval_calls)
+            self.tb_log_value("eval_x=evalcalls_rw_comp/abrupt_direction_change", 
+                    mean_rw_abrupt_direction_change, self.eval_calls)
 
             if len(self._is_success_buffer) > 0:
                 success_rate = np.mean(self._is_success_buffer)
@@ -358,7 +444,6 @@ class EvalCallback(EventCallback):
                     print(f"Success rate: {100 * success_rate:.2f}%")
                 self.tb_log_value("eval_x=trainsteps/success_rate", success_rate, self.num_timesteps)
                 self.tb_log_value("eval_x=evalcalls/success_rate", success_rate, self.eval_calls)
-                #self.logger.logkv("eval/success_rate", success_rate)
                 self.last_success_rate = success_rate
 
             if mean_reward > self.best_mean_reward:
@@ -380,8 +465,6 @@ class EvalCallback(EventCallback):
                 if self.callback is not None:
                     return self._on_event()
             
-            
-        #self.logger.dumpkvs()
         return True
 
     def update_child_locals(self, locals_: Dict[str, Any]) -> None:

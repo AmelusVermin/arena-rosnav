@@ -13,17 +13,17 @@
 
 
     <!-- set map parameters -->
-    <!-- <param name="/$(arg ns)/flatland_server/world_path" value="$(find simulator_setup)/maps/$(arg map_file)/map.world.yaml"/> -->
-    <param name="/$(arg ns)/flatland_server/world_path" value="$(find simulator_setup)/maps/$(arg map_file)/map.world.yaml" if="$(eval map_file!='random_map')"/>
-    <param name="/$(arg ns)/flatland_server/world_path" value="$(find simulator_setup)/maps/$(arg map_file)/$(arg ns)_map.world.yaml" if="$(eval map_file=='random_map')"/>
+    <param name="/$(arg ns)/flatland_server/world_path" value="$(find simulator_setup)/maps/$(arg map_file)/map.world.yaml"/>
+    <!-- <param name="/$(arg ns)/flatland_server/world_path" value="$(find simulator_setup)/maps/$(arg map_file)/map.world.yaml" if="$(eval map_file!='random_map')"/> -->
+    <!-- <param name="/$(arg ns)/flatland_server/world_path" value="$(find simulator_setup)/maps/$(arg map_file)/$(arg ns)_map.world.yaml" if="$(eval map_file=='random_map')"/> -->
 
-    <!-- <param name="/$(arg ns)/flatland_server/map_layer_path" value="$(find simulator_setup)/maps/$(arg map_file)/map_layer.yaml"/> -->
-    <param name="/$(arg ns)/flatland_server/map_layer_path" value="$(find simulator_setup)/maps/$(arg map_file)/map_layer.yaml" if="$(eval map_file!='random_map')"/>
-    <param name="/$(arg ns)/flatland_server/map_layer_path" value="$(find simulator_setup)/maps/$(arg map_file)/$(arg ns)_map_layer.yaml" if="$(eval map_file=='random_map')"/>
+    <param name="/$(arg ns)/flatland_server/map_layer_path" value="$(find simulator_setup)/maps/$(arg map_file)/map_layer.yaml"/>
+    <!-- <param name="/$(arg ns)/flatland_server/map_layer_path" value="$(find simulator_setup)/maps/$(arg map_file)/map_layer.yaml" if="$(eval map_file!='random_map')"/> -->
+    <!-- <param name="/$(arg ns)/flatland_server/map_layer_path" value="$(find simulator_setup)/maps/$(arg map_file)/$(arg ns)_map_layer.yaml" if="$(eval map_file=='random_map')"/> -->
 
-    <!-- <param name="/$(arg ns)/flatland_server/map_file" value="$(arg map_file)"/> -->
-    <param name="/$(arg ns)/flatland_server/map_file" value="$(arg map_file)" if="$(eval map_file!='random_map')"/>
-    <param name="/$(arg ns)/flatland_server/map_file" value="$(arg ns)_$(arg map_file)" if="$(eval map_file=='random_map')"/>
+    <param name="/$(arg ns)/flatland_server/map_file" value="$(arg map_file)"/>
+    <!-- <param name="/$(arg ns)/flatland_server/map_file" value="$(arg map_file)" if="$(eval map_file!='random_map')"/> -->
+    <!-- <param name="/$(arg ns)/flatland_server/map_file" value="$(arg ns)_$(arg map_file)" if="$(eval map_file=='random_map')"/> -->
     
     <!-- use fake localization-->
     <include file="$(find arena_bringup)/launch/sublaunch_training/fake_localization.launch">

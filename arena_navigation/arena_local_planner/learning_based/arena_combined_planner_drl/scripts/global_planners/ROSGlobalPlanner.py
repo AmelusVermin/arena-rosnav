@@ -33,7 +33,7 @@ class ROSGlobalPlanner(GlobalPlanner):
         # start service node
         self._global_planner_process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, preexec_fn=set_pdeathsig(signal.SIGTERM))       
         # prepare variables
-        self.last_successful_plan = nav_msgs.msg.Path()
+        self._last_successful_plan = nav_msgs.msg.Path()
 
     def get_global_plan(self, goal, odom):
         """ Calls the global planner service with the given goal and returns response. Ignores odom """
@@ -56,14 +56,13 @@ class ROSGlobalPlanner(GlobalPlanner):
 
         assert len(global_plan.poses) >= 2, "Global plan with only 1 or less poses was returned. This should not happen!"
         
-        # check if emergency plan of start and end position was returned by service, this happen when no plan was found
-        if len(global_plan.poses) == 2:
-            if global_plan.poses[0].pose == global_plan.poses[1].pose:
-                # replace global_plan by the last successful one
-                global_plan == self.last_successful_plan
-            else:
-                self.last_successful_plan = global_plan
-
+        # check if plan with 2 poses was returned, this happens when no plan was found or the robot is pretty close to the goal
+        if len(global_plan.poses) == 2 and len(self._last_successful_plan.poses) > 2:
+            # replace global_plan by the last successful one
+            global_plan == self._last_successful_plan
+        else:
+            self._last_successful_plan = global_plan
+        
         return global_plan
 
     def _is_pose_equal(self, pose1 : PoseStamped, pose2 : PoseStamped):

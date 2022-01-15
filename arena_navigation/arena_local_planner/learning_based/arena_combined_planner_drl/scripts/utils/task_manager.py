@@ -25,7 +25,7 @@ class TaskManager:
         self.ns = ns
         self.paths = paths
         self.run_scenario = run_scenario
-        self.last_stage = 1
+        self.last_stage = 0
         if self.run_scenario:
             self.task = get_predefined_task(ns, mode='scenario', start_stage=1, PATHS=paths)
         else:
@@ -50,7 +50,7 @@ class TaskManager:
         numb_dyn_obst = map_params[start_stage]['dynamic']
         map_type = map_params[start_stage]['map_type']
         if map_type == 'mixed':
-            indoor_prob = map_params['indoor_prob']
+            indoor_prob = map_params[start_stage]['indoor_prob']
         else:
             indoor_prob = 0
 
@@ -138,7 +138,7 @@ class TaskManager:
         while not isinstance(curr_stage, int):
             curr_stage = rospy.get_param("/curr_stage")
 
-        if self.last_stage != curr_stage:
+        if self.last_stage != curr_stage or self.last_stage == 0:
             self.last_stage = curr_stage
             self._update_map_parameters(curr_stage)
 
