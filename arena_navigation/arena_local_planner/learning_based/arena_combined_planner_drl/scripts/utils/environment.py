@@ -16,6 +16,8 @@ from .geometry_utils import pose3D_to_pose2D, get_pose_difference, get_path_leng
 from .observer import Observer
 from .reward import RewardCalculator
 from .task_manager import TaskManager
+from datetime import datetime as dt
+
 
 class FlatlandEnv(gym.Env):
     """ Custom environment that follows gym interface """
@@ -32,7 +34,7 @@ class FlatlandEnv(gym.Env):
             else:
                 # if the ns does not match the pattern, its probably the empty ns and thus, only one environment is created
                 ns_int = 0
-            time.sleep(ns_int * 7)
+            time.sleep(ns_int * 13)
         except Exception:
             rospy.logwarn(
                 f"Can't determine the number of the environment, training script may crash!"
@@ -45,20 +47,23 @@ class FlatlandEnv(gym.Env):
         self._curr_episode = 0
         self._evaluation = evaluation
         self._train_mode = train_mode
+        self._task_mode = args.task_mode
+        self._last_stage = args.task_curr_stage
         if args.seed is None:
             self._seed = random.randint(0, 1000000000)
         else:
             self._seed = args.seed
-            
-        # init ros node for environment 
+
+        # init ros node for environment
         if train_mode:
-            rospy.init_node(f"train_env_{self.ns}", disable_signals=False, log_level=args.log_level)
+            rospy.init_node(
+                f"train_env_{self.ns}", disable_signals=False, log_level=args.log_level)
         else:
-            rospy.init_node(f"eval_env_{self.ns}", disable_signals=False, log_level=args.log_level)
+            rospy.init_node(
+                f"eval_env_{self.ns}", disable_signals=False, log_level=args.log_level)
 
         # set some arguments used outside the init method
-        self._max_train_steps_per_episode = args.train_max_steps_per_episode
-        self._max_eval_steps_per_episode = args.eval_max_steps_per_episode
+        self._max_steps_per_episode = args.train_max_steps_per_episode if self._train_mode else args.eval_max_steps_per_episode
         self._num_lidar_beams = args.num_lidar_beams
         self._extended_eval = args.extended_eval
         self._max_deque_size = args.max_deque_size
@@ -72,12 +77,15 @@ class FlatlandEnv(gym.Env):
             dtype=np.float,
         )
         # define publisher
-        self._agent_action_pub = rospy.Publisher(f"{self.ns_prefix}cmd_vel", Twist, queue_size=1)
-        self._global_planner_pub = rospy.Publisher(f"{self.ns_prefix}globalPlan", nav_msgs.msg.Path, queue_size=1)
-        self._mid_planner_pub = rospy.Publisher(f"{self.ns_prefix}subgoal", PoseStamped, queue_size=1)
+        self._agent_action_pub = rospy.Publisher(
+            f"{self.ns_prefix}cmd_vel", Twist, queue_size=1)
+        self._global_planner_pub = rospy.Publisher(
+            f"{self.ns_prefix}globalPlan", nav_msgs.msg.Path, queue_size=1)
+        self._mid_planner_pub = rospy.Publisher(
+            f"{self.ns_prefix}subgoal", PoseStamped, queue_size=1)
 
         # set global and mid planner
-        self._global_planner = global_planner(self.ns)
+        self._global_planner = global_planner(self.ns, args.configs_folder)
         self._mid_planner = mid_planner(self.ns)
         self._replan = True
         # variables for storing global plans and mid plans
@@ -87,9 +95,9 @@ class FlatlandEnv(gym.Env):
         self._last_global_plan = None
         self._last_subgoal = None
 
-        #setup rewarding
+        # setup rewarding
         if args.safe_dist is None:
-            safe_dist = 1.6 * args.robot_radius
+            safe_dist = 1.15 * args.robot_radius
 
         self.reward_calculator = RewardCalculator(
             robot_radius=args.robot_radius,
@@ -98,25 +106,25 @@ class FlatlandEnv(gym.Env):
             rule=args.reward_fnc,
             collision_tolerance=args.collision_tolerance,
             extended_eval=self._extended_eval,
+            max_timesteps=self._max_steps_per_episode
         )
         self._reward_composition = {
-            "time consumption" : 0,
-            "path length" : 0,
-            "goal reached" : 0,
-            "goal approached" : 0,
-            "collision" : 0,
-            "safe dist" : 0,
-            "not moving" : 0,
-            "distance traveled" : 0,
-            "distance global plan" : 0,
-            "following global plan" : 0,
-            "abrupt direction change" : 0
+            "time consumption": 0,
+            "reduced path length": 0,
+            "goal reached": 0,
+            "goal approached": 0,
+            "collision": 0,
+            "safe dist": 0,
+            "not moving": 0,
+            "distance traveled": 0,
+            "distance global plan": 0,
+            "following global plan": 0,
+            "abrupt direction change": 0
         }
 
-        # create task 
-        self._task_manager = TaskManager(self.ns, paths, False, args.task_curr_stage)
-        #self._task_manager = get_predefined_task(self.ns, mode=args.task_mode, start_stage=args.task_curr_stage, PATHS=paths)
-
+        # create task
+        self._task_manager = TaskManager(self.ns, paths, False, args.task_curr_stage,
+                                         min_dist=args.min_dist_goal, global_planner=self._global_planner)
 
         # publisher for random map training
         self.demand_map_pub = rospy.Publisher("/demand", String, queue_size=1)
@@ -125,7 +133,8 @@ class FlatlandEnv(gym.Env):
         action_rate = rospy.get_param("/robot_action_rate")
         while not (type(action_rate) == float or type(action_rate) == int):
             # for some reason get_param returns sometimes not the right value and type TODO find reason for this
-            rospy.logerr(f"rospy.get_param('/robot_action_rate') returns: {action_rate} in namespace: {self.ns}, try again!")
+            rospy.logerr(
+                f"rospy.get_param('/robot_action_rate') returns: {action_rate} in namespace: {self.ns}, try again!")
             action_rate = rospy.get_param("/robot_action_rate")
 
         self._action_frequency = 1 / action_rate
@@ -138,10 +147,10 @@ class FlatlandEnv(gym.Env):
 
         # let the environment run a bit to initiate some services in global and mid planner()
         if self._is_sim_in_train_mode:
-            while not (self._global_planner.is_ready() and self._mid_planner.is_ready()): 
+            while not (self._global_planner.is_ready() and self._mid_planner.is_ready()):
                 self._call_service_takeSimStep(self._action_frequency)
-        rospy.logdebug(f"{self.ns}: initialization finished in {time.perf_counter() - t1}sec!")
-        
+        rospy.logdebug(
+            f"{self.ns}: initialization finished in {time.perf_counter() - t1}sec!")
 
     def _pub_agent_action(self, action):
         """ publishes the agent action for the flatland sim """
@@ -157,7 +166,8 @@ class FlatlandEnv(gym.Env):
                         1   -   collision with obstacle
                         2   -   goal reached
         """
-        rospy.logdebug(f"\n-------------ns:{self.ns}, step: {self._steps_curr_episode}, episode: {self._curr_episode}-------------")
+        rospy.logdebug(
+            f"\n-------------ns:{self.ns}, step: {self._steps_curr_episode}, episode: {self._curr_episode}-------------")
         # publish agent action
         self._pub_agent_action(action)
 
@@ -169,7 +179,6 @@ class FlatlandEnv(gym.Env):
                 rospy.wait_for_message(f"ns:{self.ns}, next_cycle", Bool)
             except Exception:
                 pass
-        
 
         # get current observation
         rospy.logdebug(f"ns:{self.ns}, get observation")
@@ -182,10 +191,12 @@ class FlatlandEnv(gym.Env):
         # get global plan, check if valid and publish it
         if (self._steps_curr_episode % self._gp_interval) == 0:
             rospy.logdebug(f"replan global plan")
-            global_plan = self._global_planner.get_global_plan(global_goal, odom)
+            global_plan, success = self._global_planner.get_global_plan(
+                global_goal, odom)
             assert global_plan is not None, "global plan is None!"
-            assert isinstance(global_plan, nav_msgs.msg.Path), "global path is not type of Path!"
-            assert len(global_plan.poses) != 0, "global plan has length 0!"
+            assert isinstance(
+                global_plan, nav_msgs.msg.Path), "global path is not type of Path!"
+            assert len(global_plan.poses) > 0, "global plan has length 0!"
             self._last_global_plan = global_plan
             self._global_planner_pub.publish(global_plan)
         assert self._last_global_plan is not None, "no global plan is available for this step!"
@@ -195,20 +206,25 @@ class FlatlandEnv(gym.Env):
             rospy.logdebug(f"replan subgoal")
             subgoal = self._mid_planner.get_subgoal(global_plan, odom)
             assert subgoal is not None, "subgoal is None!"
-            assert isinstance(subgoal, PoseStamped), "subgoal is not type of PoseStamped!"
+            assert isinstance(
+                subgoal, PoseStamped), "subgoal is not type of PoseStamped!"
             self._last_subgoal = subgoal
             self._mid_planner_pub.publish(subgoal)
         assert self._last_subgoal is not None, "no subgoal is available for this step!"
 
         # convert global plan Path message to nparray
-        global_plan_array = Observer.process_global_plan_msg(self._last_global_plan)
-        
-        # prepare agent observation 
-        global_plan_length =  get_path_length(global_plan_array)
-        observation = self._observer.prepare_agent_observation(robot_pose_2D, scan, global_goal.pose, self._last_subgoal.pose, self._last_global_plan.poses, global_plan_length)
+        global_plan_array = Observer.process_global_plan_msg(
+            self._last_global_plan)
+
+        # prepare agent observation
+        global_plan_length = get_path_length(global_plan_array)
+        observation = self._observer.prepare_agent_observation(
+            robot_pose_2D, scan, global_goal.pose, self._last_subgoal.pose, self._last_global_plan.poses, global_plan_length)
         #subgoal_2D = pose3D_to_pose2D(self._last_subgoal.pose)
-        goal_tup = get_pose_difference(pose3D_to_pose2D(global_goal.pose), robot_pose_2D)
-        subgoal_tup = get_pose_difference(pose3D_to_pose2D(self._last_subgoal.pose), robot_pose_2D)
+        goal_tup = get_pose_difference(
+            pose3D_to_pose2D(global_goal.pose), robot_pose_2D)
+        subgoal_tup = get_pose_difference(
+            pose3D_to_pose2D(self._last_subgoal.pose), robot_pose_2D)
         # calculate reward
         rospy.logdebug(f"ns:{self.ns}, get reward")
         reward, reward_info, reward_composition = self.reward_calculator.get_reward(
@@ -241,22 +257,23 @@ class FlatlandEnv(gym.Env):
             info["is_success"] = reward_info["is_success"]
 
         # check if the max step number for an episode is reached
-        if (self._train_mode and self._steps_curr_episode >= self._max_train_steps_per_episode or 
-            not self._train_mode and self._steps_curr_episode >= self._max_eval_steps_per_episode):
-                done = True
-                info["done_reason"] = 0
-                info["is_success"] = 0
-        
+        if (self._steps_curr_episode >= self._max_steps_per_episode):
+            done = True
+            info["done_reason"] = 0
+            info["is_success"] = 0
+
         info = {**info, **self._reward_composition}
         self._steps_curr_episode += 1
-        rospy.logdebug(f"ns:{self.ns}, end of step, reward: {reward}, done: {done}, info: {info}")
+        rospy.logdebug(
+            f"ns:{self.ns}, end of step, reward: {reward}, done: {done}, info: {info}")
         return observation, reward, done, info
-    
+
     def reset(self):
         """ resets the environment for a new episode """
-        rospy.loginfo(f"ns:{self.ns}, reset environment.")
+        rospy.loginfo(
+            f"{dt.now().strftime('%d.%m %H:%M')}::ns:{self.ns}, reset environment.")
         # demand a map update
-        self.demand_map_pub.publish("") 
+        self.demand_map_pub.publish("")
         # make the robot stop and stepforward
         self._agent_action_pub.publish(Twist())
         if self._is_sim_in_train_mode:
@@ -269,30 +286,31 @@ class FlatlandEnv(gym.Env):
         # reset task manager
         rospy.logdebug(f"ns:{self.ns}: reset, task and map.")
         if self._evaluation:
-            seed = (self._curr_episode % self._max_eval_steps_per_episode) * self._seed
+            seed = (self._curr_episode %
+                    self._max_steps_per_episode) * self._seed
         else:
             seed = random.randint(0, 1000000)
         self._task_manager.reset(seed)
-        
+
         rospy.logdebug(f"ns:{self.ns}: reset, rewards.")
         self.reward_calculator.reset()
         self._reward_composition = {
-            "time consumption" : 0,
-            "path length" : 0,
-            "goal reached" : 0,
-            "goal approached" : 0,
-            "collision" : 0,
-            "safe dist" : 0,
-            "not moving" : 0,
-            "distance traveled" : 0,
-            "distance global plan" : 0,
-            "following global plan" : 0,
-            "abrupt direction change" : 0
+            "time consumption": 0,
+            "reduced path length": 0,
+            "goal reached": 0,
+            "goal approached": 0,
+            "collision": 0,
+            "safe dist": 0,
+            "not moving": 0,
+            "distance traveled": 0,
+            "distance global plan": 0,
+            "following global plan": 0,
+            "abrupt direction change": 0
         }
 
         self._steps_curr_episode = 0
         self._curr_episode += 1
-        
+
         obs_dict = None
         # as long as not all observations are available, let some time pass and try again
         # goal need to be available and at least one synced scan and odom in the new episode
@@ -301,7 +319,7 @@ class FlatlandEnv(gym.Env):
             if self._is_sim_in_train_mode:
                 for _ in range(self._max_deque_size):
                     self._call_service_takeSimStep(self._action_frequency)
-            else: 
+            else:
                 time.sleep(0.05)
             obs_dict = self._observer.get_observation()
         rospy.logdebug(f"{self.ns}: reset, got observations!")
@@ -310,26 +328,35 @@ class FlatlandEnv(gym.Env):
         odom = obs_dict['odom']
         robot_pose2D = obs_dict['robot_pose']
         global_goal = obs_dict['global_goal']
-                
+
+        # reset planner
+        self._global_planner.reset()
+        self._mid_planner.reset()
+
         # get global plan and publish it
         rospy.logdebug(f"{self.ns}: reset, get global plan!")
-        global_plan = self._global_planner.get_global_plan(global_goal, odom)
+        global_plan, success = self._global_planner.get_global_plan(
+            global_goal, odom)
+        self._last_global_plan = global_plan
         self._global_planner_pub.publish(global_plan)
         # get subgoal and publish it
         rospy.logdebug(f"{self.ns}: reset, get subgoal!")
         subgoal = self._mid_planner.get_subgoal(global_plan, odom)
+        self._last_subgoal = subgoal
         self._mid_planner_pub.publish(subgoal)
         # convert global plan Path message to nparray
         global_plan_array = Observer.process_global_plan_msg(global_plan)
-        # prepare agent observation 
-        observation = self._observer.prepare_agent_observation(robot_pose2D, scan, global_goal.pose, subgoal.pose, global_plan.poses, get_path_length(global_plan_array))
-        rospy.logdebug(f"{self.ns}: reset environment finished!")
+        # prepare agent observation
+        observation = self._observer.prepare_agent_observation(
+            robot_pose2D, scan, global_goal.pose, subgoal.pose, global_plan.poses, get_path_length(global_plan_array))
+        rospy.loginfo(
+            f"{dt.now().strftime('%d.%m %H:%M')}::{self.ns}: reset environment finished!")
         return observation
-    
+
     def render(self, mode='human'):
         pass
 
-    def close (self):
+    def close(self):
         """ clean the environment when closing it """
         # close the planners
         self._global_planner.close()

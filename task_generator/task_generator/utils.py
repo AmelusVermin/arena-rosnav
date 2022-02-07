@@ -2,7 +2,9 @@ import math
 import numpy as np
 from nav_msgs.msg import OccupancyGrid
 import random
-
+import signal
+import ctypes
+from skimage.draw import polygon
 
 def generate_freespace_indices(map_: OccupancyGrid) -> tuple:
     """generate the indices(represented in a tuple) of the freesapce based on the map
@@ -82,3 +84,10 @@ def get_random_pos_on_map(free_space_indices, map_: OccupancyGrid, safe_dist: fl
     theta = random.uniform(-math.pi, math.pi)
 
     return x_in_meters, y_in_meters, theta
+
+def set_pdeathsig(sig = signal.SIGTERM):
+    """ Used for sending signals to subprocess when parent process dies. (used as parameter in Popen) """
+    libc = ctypes.CDLL("libc.so.6")
+    def callable():
+        return libc.prctl(1, sig)
+    return callable

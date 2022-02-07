@@ -21,7 +21,7 @@ GlobalPlanner:
 
 global_costmap:
   # http://wiki.ros.org/costmap_2d
-  global_frame: "/map" # default "/map"
+  global_frame: "/full_map" # default "/map"
   robot_base_frame: "base_link" # default "base_link"
   transform_tolerance: 0.2 # default 0.2
   update_frequency: 10.0 # default 5.0

@@ -1,5 +1,6 @@
 # from math import ceil, sqrt
 import math
+from xmlrpc.client import boolean
 import yaml
 import os
 import threading
@@ -8,12 +9,13 @@ import rospy
 import tf
 from flatland_msgs.srv import MoveModel, MoveModelRequest, SpawnModelRequest, SpawnModel
 from flatland_msgs.srv import StepWorld
-from geometry_msgs.msg import Pose2D, PoseWithCovarianceStamped, PoseStamped
-
-from nav_msgs.msg import OccupancyGrid, Path
+from geometry_msgs.msg import Pose2D, PoseStamped, PoseWithCovariance
+from std_msgs.msg import Header
+from nav_msgs.msg import OccupancyGrid, Path, Odometry
 
 from .utils import generate_freespace_indices, get_random_pos_on_map
-
+from .utils import set_pdeathsig
+import time
 
 class RobotManager:
     """
@@ -21,7 +23,7 @@ class RobotManager:
     is managed
     """
 
-    def __init__(self, ns: str, map_: OccupancyGrid, robot_yaml_path: str, timeout=20):
+    def __init__(self, ns: str, map_: OccupancyGrid, robot_yaml_path: str, timeout=20, global_planner = None):
         """[summary]
 
         Args:
@@ -55,6 +57,7 @@ class RobotManager:
         self._goal_pub = rospy.Publisher(
             f'{self.ns_prefix}goal', PoseStamped, queue_size=1, latch=True)
 
+        self._global_planner = global_planner
         self.update_map(map_)
         self._spawn_robot(robot_yaml_path)
 
@@ -150,13 +153,14 @@ class RobotManager:
 
         if start_pos is None or goal_pos is None:
             # if any of them need to be random generated, we set a higher threshold,otherwise only try once
-            max_try_times = 20
+            max_try_times = 40
         else:
             max_try_times = 1
 
         i_try = 0
         start_pos_ = None
         goal_pos_ = None
+        
         while i_try < max_try_times:
 
             if start_pos is None:
@@ -175,8 +179,29 @@ class RobotManager:
             if dist(start_pos_.x, start_pos_.y, goal_pos_.x, goal_pos_.y) < min_dist:
                 i_try += 1
                 continue
+            
+            # when a global planner is given check if there is a path from start to goal
+            if self._global_planner is not None:
+                self._global_planner.reset()
+                # prepare service input 
+                odom = Odometry()
+                start = self.create_pose_stamped(start_pos_.x, start_pos_.y, start_pos_.theta)
+                pose_cov = PoseWithCovariance()
+                pose_cov.pose = start.pose
+                odom.pose = pose_cov
+                goal = self.create_pose_stamped(goal_pos_.x, goal_pos_.y, goal_pos_.theta)
+                
+                # get global path
+                _, success = self._global_planner.get_global_plan(goal, odom)
+   
+                # if there is no path, try again
+                if not success:
+                    i_try += 1
+                    continue
+
             # move the robot to the start pos
             self.move_robot(start_pos_)
+
             try:
                 # publish the goal, if the gobal plath planner can't generate a path, a, exception will be raised.
                 self.publish_goal(goal_pos_.x, goal_pos_.y, goal_pos_.theta)
@@ -207,6 +232,20 @@ class RobotManager:
             else:
                 self._new_global_path_generated = False  # reset it
 
+    def create_pose_stamped(self, x, y, theta, frame_id="map"):
+        self._old_global_path_timestamp = self._global_path.header.stamp
+        pose = PoseStamped()
+        pose.header.stamp = rospy.get_rostime()
+        pose.header.frame_id = frame_id
+        pose.pose.position.x = x
+        pose.pose.position.y = y
+        quaternion = tf.transformations.quaternion_from_euler(0, 0, 0)
+        pose.pose.orientation.w = quaternion[0]
+        pose.pose.orientation.x = quaternion[1]
+        pose.pose.orientation.y = quaternion[2]
+        pose.pose.orientation.z = quaternion[3]
+        return pose
+
     def publish_goal(self, x, y, theta):
         """
         Publishing goal (x, y, theta)
@@ -214,17 +253,8 @@ class RobotManager:
         :param y y-position of the goal
         :param theta theta-position of the goal
         """
-        self._old_global_path_timestamp = self._global_path.header.stamp
-        goal = PoseStamped()
-        goal.header.stamp = rospy.get_rostime()
-        goal.header.frame_id = "map"
-        goal.pose.position.x = x
-        goal.pose.position.y = y
-        quaternion = tf.transformations.quaternion_from_euler(0, 0, 0)
-        goal.pose.orientation.w = quaternion[0]
-        goal.pose.orientation.x = quaternion[1]
-        goal.pose.orientation.y = quaternion[2]
-        goal.pose.orientation.z = quaternion[3]
+    
+        goal = self.create_pose_stamped(x,y,theta)
         self._goal_pub.publish(goal)
         # self._validate_path()
 

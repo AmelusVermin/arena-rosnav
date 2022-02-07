@@ -8,13 +8,22 @@ from .startup_utils import get_agent_name, setup_paths
 
 LOG_LEVELS = {'debug' : rospy.DEBUG, 'info' : rospy.INFO, 'warn' : rospy.WARN, 'error' : rospy.ERROR}
 
-def get_arguments(settings_path:str):
+def get_commandline_arguments():
+    """parse the command line arguments with argparse"""
+    # parse commandline arguments
+    parser = argparse.ArgumentParser(description='Perform training of global, intermediate and local planner together.')
+    parser.add_argument('--log_level', '-l', type=str, choices=['debug', 'info', 'warn', 'error'], default="info")
+    parser.add_argument("--n_envs", '-ne', type=int, default=0, help="number of parallel environments.")
+    parser.add_argument("--show_registered_types", '-srt', action="store_true", default=False, help="Prints the available agent types.")
+    parser.add_argument("--configs_folder", '-cf', type=str, default="default", help="Loads the given settings files in the given folder instead of default one.")
+    args = parser.parse_args()
+    args.log_level = LOG_LEVELS[args.log_level]
+    return args
+
+def get_config_arguments(command_line_args: argparse.Namespace, settings_path:str):
     """parses all necessary configs, commandline arguments and prepares some arguments"""
     # get command line arguments
-    args = _get_commandline_args()
-    # check if alternitive config files are given
-    if args.settings_file is not "":
-        settings_path = args.settings_file
+    args = command_line_args
     # load configs
     args = _add_robot_config(args)
     args = add_yaml_config(args, settings_path)
@@ -24,20 +33,6 @@ def get_arguments(settings_path:str):
     # prepare some paths for logging and saving
     save_paths = setup_paths(args)
     return args, save_paths
-    
-
-def _get_commandline_args():
-    """parse the command line arguments with argparse"""
-    # parse commandline arguments
-    parser = argparse.ArgumentParser(description='Perform training of global, intermediate and local planner together.')
-    parser.add_argument('--log_level', '-l', type=str, choices=['debug', 'info', 'warn', 'error'], default="debug")
-    parser.add_argument("--n_envs", '-ne', type=int, default=0, help="number of parallel environments.")
-    parser.add_argument("--debug", action="store_true", help="Disables multiprocessing in order to debug.")
-    parser.add_argument("--show_registered_types", '-srt', action="store_true", default=False, help="Prints the available agent types.")
-    parser.add_argument("--settings_file", '-sf',type=str, default="", help="Loads the given settings yaml file instead of default one.")
-    args = parser.parse_args()
-    args.log_level = LOG_LEVELS[args.log_level]
-    return args
 
 def _add_robot_config(args):
     """parses robot related config file from simulator setup package and adds important ones to the given args"""

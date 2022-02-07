@@ -24,3 +24,7 @@ class GlobalPlanner(ABC):
     @abstractmethod
     def is_ready(self):
         pass
+
+    @abstractmethod
+    def reset(self):
+        pass

@@ -49,3 +49,6 @@ class Dummy(GlobalPlanner):
         """ Returns if the planner is ready for work. It is always ready """
         return True
 
+    def reset(self):
+        pass
+

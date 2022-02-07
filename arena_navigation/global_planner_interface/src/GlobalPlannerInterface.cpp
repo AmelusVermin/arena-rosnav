@@ -43,8 +43,9 @@ GlobalPlannerInterface::GlobalPlannerInterface() : bgp_loader_("nav_core", "nav_
     }
     // create services
     _getGlobalPlan = nh.advertiseService("makeGlobalPlan", &GlobalPlannerInterface::makeNewPlanCallback, this);
+    _getGlobalPlanFull = nh.advertiseService("makeGlobalPlanFull", &GlobalPlannerInterface::makeNewPlanFullCallback, this);
 
-    _resetCostmap = nh.advertiseService("resetGlobalCostmap", &GlobalPlannerInterface::resetCostmapCallback, this);
+    _resetCostmap = nh.advertiseService("resetCostmap", &GlobalPlannerInterface::resetCostmapCallback, this);
 }
 
 bool GlobalPlannerInterface::makeNewPlanCallback(global_planner_interface::MakeGlobalPlan::Request &req,
@@ -53,12 +54,13 @@ bool GlobalPlannerInterface::makeNewPlanCallback(global_planner_interface::MakeG
     _costmap_ros->getRobotPose(robot_pose);
 
     vector<geometry_msgs::PoseStamped> global_plan;
+    rep.success = true;
     if (!_global_planner->makePlan(robot_pose, req.goal, global_plan) || global_plan.empty()) {
-        cout << global_plan.size() << endl;
         reset_costmap();
         if (!_global_planner->makePlan(robot_pose, req.goal, global_plan) || global_plan.empty()) {
             ROS_WARN("Couldn't find global plan!");
             rep.global_plan.poses = {robot_pose, req.goal};
+            rep.success = false;
             // call automatic reset and return early to avoid overwriting the response with empty plan
             automatic_reset();
             return true;
@@ -75,6 +77,34 @@ bool GlobalPlannerInterface::makeNewPlanCallback(global_planner_interface::MakeG
     return true;
 }
 
+bool GlobalPlannerInterface::makeNewPlanFullCallback(global_planner_interface::MakeGlobalPlanFull::Request &req,
+                                                 global_planner_interface::MakeGlobalPlanFull::Response &rep) {
+
+    vector<geometry_msgs::PoseStamped> global_plan; 
+    rep.success = true;
+    if (!_global_planner->makePlan(req.start, req.goal, global_plan) || global_plan.empty()) {
+        reset_costmap();
+        if (!_global_planner->makePlan(req.start, req.goal, global_plan) || global_plan.empty()) {
+            ROS_WARN("Couldn't find global plan!");
+            rep.global_plan.poses = {};
+            rep.success = false;
+            // call automatic reset and return early to avoid overwriting the response with empty plan
+            automatic_reset();
+            return true;
+        }
+    }
+
+    automatic_reset();
+
+    
+    rep.global_plan.poses.resize(global_plan.size());
+    for (unsigned int i = 0; i < global_plan.size(); ++i) {
+        rep.global_plan.poses[i] = global_plan[i];
+    }
+    return true;
+}
+
+
 void GlobalPlannerInterface::reset_costmap() {
     boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(_costmap_ros->getCostmap()->getMutex()));
     _costmap_ros->resetLayers();
@@ -82,9 +112,10 @@ void GlobalPlannerInterface::reset_costmap() {
     _time_last_resetted = ros::Time::now();
 }
 
-bool GlobalPlannerInterface::resetCostmapCallback(std_srvs::Empty::Request &request,
-                                                  std_srvs::Empty::Response &response) {
+bool GlobalPlannerInterface::resetCostmapCallback(global_planner_interface::ResetCostmap::Request &request,
+                                                  global_planner_interface::ResetCostmap::Response &response) {
     reset_costmap();
+    //response.success = true;
     return true;
 }
 

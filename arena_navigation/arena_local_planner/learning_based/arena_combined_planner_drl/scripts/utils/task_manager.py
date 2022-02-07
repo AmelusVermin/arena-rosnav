@@ -1,4 +1,3 @@
-import json
 import os
 import random
 import subprocess
@@ -10,10 +9,9 @@ import rosservice
 import yaml
 from nav_msgs.srv import GetMap
 from rospy import ServiceException
-from task_generator.obstacles_manager import ObstaclesManager
-from task_generator.robot_manager import RobotManager
-from task_generator.task_generator.tasks import StagedRandomTask
-from task_generator.tasks import get_predefined_task, RandomTask
+from task_generator.task_generator.obstacles_manager import ObstaclesManager
+from task_generator.task_generator.robot_manager import RobotManager
+from task_generator.task_generator.tasks import StagedRandomTask, get_predefined_task
 
 from .multi_threading_utils import set_pdeathsig
 from simulator_setup.srv import *
@@ -21,23 +19,33 @@ from simulator_setup.srv import *
 
 class TaskManager:
 
-    def __init__(self, ns: str, paths: dict, run_scenario: bool, start_stage: int = 1):
+    def __init__(self, ns: str, paths: dict, run_scenario: bool, start_stage: int = 1, min_dist: float = 1, global_planner=None):
         self.ns = ns
         self.paths = paths
         self.run_scenario = run_scenario
         self.last_stage = 0
+        self.min_dist = min_dist
+        self.global_planner = global_planner
         if self.run_scenario:
-            self.task = get_predefined_task(ns, mode='scenario', start_stage=1, PATHS=paths)
+            self.task = get_predefined_task(ns, mode='scenario', start_stage=1, min_dist=min_dist, PATHS=paths, global_planner=global_planner)
         else:
             self.task = self._get_random_task(paths, start_stage)
             self._request_new_map = rospy.ServiceProxy("/" + self.ns + "/new_map", GetMapWithSeed)
 
     def reset(self, seed, new_map=True):
-        if not self.run_scenario:
-            if new_map:
-                self._update_map(seed)
-            random.seed(seed)
-        self.task.reset()
+        done = False
+        while(not done):
+            if not self.run_scenario:
+                if new_map:
+                    self._update_map(seed)
+                random.seed(seed)
+            try:
+                self.task.reset()
+                done = True
+            except Exception:
+                rospy.logwarn(f"{self.ns}: reset error, try again!")
+                done = False
+
 
     def _get_random_task(self, paths: dict, start_stage):
         config_path = paths['curriculum']
@@ -70,7 +78,7 @@ class TaskManager:
         map_response = service_client_get_map()
         models_folder_path = rospkg.RosPack().get_path('simulator_setup')
         self.robot_manager = RobotManager(self.ns, map_response.map, os.path.join(
-            models_folder_path, 'robot', "myrobot.model.yaml"))
+            models_folder_path, 'robot', "myrobot.model.yaml"), global_planner = self.global_planner)
         self.obstacles_manager = ObstaclesManager(self.ns, map_response.map)
         rospy.set_param("/task_mode", "staged")
         numb_obst = numb_static_obst + numb_dyn_obst
@@ -79,7 +87,7 @@ class TaskManager:
         else:
             prob_dyn_obst = 1
         self.obstacles_manager.register_random_obstacles(numb_obst, prob_dyn_obst)
-        return StagedRandomTask(self.ns, self.obstacles_manager, self.robot_manager, start_stage, self.paths)
+        return StagedRandomTask(self.ns, self.obstacles_manager, self.robot_manager, start_stage, self.min_dist, self.paths)
 
     def _start_map_generator_node(self, map_type: str, indoor_prob: float):
         package = 'simulator_setup'
@@ -128,20 +136,17 @@ class TaskManager:
         rospy.set_param(f"/{self.ns}/map_generator_node/obstacle_extra_radius", 
                         map_params[curr_stage]["outdoor_obstacle_extra_radius"])
 
-
-
-
     def _update_map(self, seed: int):
         # update map parameters when stage has changed
         curr_stage = rospy.get_param("/curr_stage")
-        rospy.logdebug(f"{self.ns}: update map in stage {curr_stage}!")
-        while not isinstance(curr_stage, int):
+        while not isinstance(curr_stage, int) or curr_stage==0:
             curr_stage = rospy.get_param("/curr_stage")
+        rospy.loginfo(f"{self.ns}: update map in stage {curr_stage}!")
 
         if self.last_stage != curr_stage or self.last_stage == 0:
-            self.last_stage = curr_stage
             self._update_map_parameters(curr_stage)
 
+        self.last_stage = curr_stage
         # request new map and update maanager
         request = GetMapWithSeedRequest(seed=seed)
         try:

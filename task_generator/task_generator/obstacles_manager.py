@@ -1,7 +1,9 @@
 import math
 import random
+#from turtle import _PolygonCoords
 from typing import Union
 import re
+from scipy.fftpack import cc_diff
 import yaml
 import os
 import warnings
@@ -9,6 +11,7 @@ from flatland_msgs.srv import DeleteModel, DeleteModelRequest
 from flatland_msgs.srv import SpawnModel, SpawnModelRequest
 from flatland_msgs.srv import MoveModel, MoveModelRequest
 from flatland_msgs.srv import StepWorld
+
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Pose2D
 import numpy as np
@@ -16,9 +19,9 @@ from rospy.rostime import Time
 from std_msgs.msg import Empty
 import rospy
 import rospkg
-import shutil
 from .utils import generate_freespace_indices, get_random_pos_on_map
 
+from skimage.draw import polygon, circle_perimeter
 
 class ObstaclesManager:
     """
@@ -37,6 +40,7 @@ class ObstaclesManager:
 
         # a list of publisher to move the obstacle to the start pos.
         self._move_all_obstacles_start_pos_pubs = []
+        
 
         # setup proxy to handle  services provided by flatland
         rospy.wait_for_service(f'{self.ns_prefix}move_model', timeout=20)
@@ -49,19 +53,26 @@ class ObstaclesManager:
             f'{self.ns_prefix}delete_model', DeleteModel, persistent=True)
         self._srv_spawn_model = rospy.ServiceProxy(
             f'{self.ns_prefix}spawn_model', SpawnModel, persistent=True)
+        
+        self._pub_map = rospy.Publisher(f"{self.ns_prefix}map", OccupancyGrid, queue_size=1)
 
         self.update_map(map_)
         self.obstacle_name_list = []
+        self.obstacles_dict_points = {}
         self._obstacle_name_prefix = 'obstacle'
         # remove all existing obstacles generated before create an instance of this class
         self.remove_obstacles()
-
+        
+    
     def update_map(self, new_map: OccupancyGrid):
         self.map = new_map
         # a tuple stores the indices of the non-occupied spaces. format ((y,....),(x,...)
         self._free_space_indices = generate_freespace_indices(self.map)
 
-    def register_obstacles(self, num_obstacles: int, model_yaml_file_path: str, start_pos: list = []):
+    def publish_original_map(self):
+        self._pub_map.publish(self.map)
+
+    def register_obstacles(self, num_obstacles: int, model_yaml_file_path: str, start_pos: list = [], polygon_points: list = None, circle_radius = None):
         """register the obstacles defined by a yaml file and request flatland to respawn the them.
 
         Args:
@@ -77,6 +88,7 @@ class ObstaclesManager:
         Returns:
             self.
         """
+        
         assert os.path.isabs(
             model_yaml_file_path), "The yaml file path must be absolute path, otherwise flatland can't find it"
 
@@ -123,6 +135,7 @@ class ObstaclesManager:
                     i_curr_try += 1
                 else:
                     self.obstacle_name_list.append(spawn_request.name)
+                    self.obstacles_dict_points[spawn_request.name] = (polygon_points, circle_radius)
                     break
             if i_curr_try == max_num_try:
                 # raise rospy.ServiceException(f"({self.ns}) failed to register obstacles")
@@ -159,10 +172,10 @@ class ObstaclesManager:
             max_obstacle_radius (float, optional): the maximum radius of the obstacle. Defaults to 0.5.
         """
         for _ in range(num_obstacles):
-            model_path = self._generate_random_obstacle_yaml(
+            model_path, polygon_points, circle_radius = self._generate_random_obstacle_yaml(
                 True, linear_velocity=linear_velocity, angular_velocity_max=angular_velocity_max,
                 min_obstacle_radius=min_obstacle_radius, max_obstacle_radius=max_obstacle_radius)
-            self.register_obstacles(1, model_path)
+            self.register_obstacles(1, model_path, polygon_points=polygon_points, circle_radius=circle_radius)
             os.remove(model_path)
 
     def register_random_static_obstacles(self, num_obstacles: int, num_vertices_min=3, num_vertices_max=5, min_obstacle_radius=0.5, max_obstacle_radius=2):
@@ -177,9 +190,9 @@ class ObstaclesManager:
         """
         for _ in range(num_obstacles):
             num_vertices = random.randint(num_vertices_min, num_vertices_max)
-            model_path = self._generate_random_obstacle_yaml(
+            model_path, polygon_points, circle_radius = self._generate_random_obstacle_yaml(
                 False, num_vertices=num_vertices, min_obstacle_radius=min_obstacle_radius, max_obstacle_radius=max_obstacle_radius)
-            self.register_obstacles(1, model_path)
+            self.register_obstacles(1, model_path, polygon_points=polygon_points, circle_radius=circle_radius)
             os.remove(model_path)
 
     def register_static_obstacle_polygon(self, vertices: np.ndarray):
@@ -266,20 +279,87 @@ class ObstaclesManager:
         pos_non_active_obstacle.y = self.map.info.origin.position.y - \
             resolution * self.map.info.width
 
+        # prepare a copy of the map
+        full_map = OccupancyGrid()
+        full_map.header = self.map.header
+        full_map.info = self.map.info
+        rr, cc = np.array([], 'uint8'), np.array([], 'uint8')
         for obstacle_name in active_obstacle_names:
             move_model_request = MoveModelRequest()
             move_model_request.name = obstacle_name
             # TODO 0.2 is the obstacle radius. it should be set automatically in future.
             move_model_request.pose.x, move_model_request.pose.y, move_model_request.pose.theta = get_random_pos_on_map(
                 self._free_space_indices, self.map, 0.2, forbidden_zones)
-
             self._srv_move_model(move_model_request)
+            # get polygon points of object
+            poly, circle = self.obstacles_dict_points[obstacle_name]
+            if poly is not None:
+                # place polygon virtually at the right position according to move request
+                poly_rotated = [self.rotate(p, move_model_request.pose.theta) for p in poly]
+                poly_translated = [[p[0] + move_model_request.pose.x, p[1] + move_model_request.pose.y] for p in poly_rotated]
+                # get indices in map where polygon occupies space
+                rr_temp, cc_temp =  self.get_polygon_indices(full_map, poly_translated)
+                rr = np.concatenate((rr, rr_temp))
+                cc = np.concatenate((cc, cc_temp))
+            elif circle is not None:
+                # get indices in map where circle occupies space
+                rr_temp, cc_temp =  self.get_circle_indices(full_map, [move_model_request.pose.x, move_model_request.pose.y], circle)
+                rr = np.concatenate((rr, rr_temp))
+                cc = np.concatenate((cc, cc_temp))
+        # set space of polygon to 100 in occupancy grid
+        map_data = np.array(self.map.data)
+        map_data = map_data.reshape((self.map.info.height, self.map.info.width))
+        rr_clean = []
+        cc_clean = []
+        for r, c in zip(rr, cc):
+            if r < self.map.info.height and r >= 0 and c < self.map.info.width and c >= 0:
+                rr_clean.append(r)
+                cc_clean.append(c)
+        rr = rr_clean
+        cc = cc_clean
+        assert all([r < self.map.info.height and r >= 0 for r in rr]) 
+        assert all([c < self.map.info.width and c >= 0 for c in cc]) 
+        map_data[rr,cc] = 100
+        full_map.data = map_data.flatten().tolist()
+        # publish the map full map for setting a valid start, goal pair
+        self._pub_map.publish(full_map)
 
         for non_active_obstacle_name in non_active_obstacle_names:
             move_model_request = MoveModelRequest()
             move_model_request.name = non_active_obstacle_name
             move_model_request.pose = pos_non_active_obstacle
             self._srv_move_model(move_model_request)
+
+    def rotate(self, point, angle, origin=[0,0]):
+        ox, oy = origin
+        px, py = point 
+        cos_angle = np.cos(angle)
+        sin_angle = np.sin(angle)
+        rx = ox + cos_angle * (px - ox) - sin_angle * (py - oy)
+        ry = oy + sin_angle * (px - ox) + cos_angle * (py - oy) 
+        return [rx, ry]
+
+    def get_polygon_indices(self, map, polygon_points):
+        # transform points to coordinate system for polygon method
+        points_idx = [[int((p[0] - map.info.origin.position.x) // map.info.resolution), 
+                       map.info.height - int((p[1] - map.info.origin.position.y) // map.info.resolution)] 
+                       for p in polygon_points]
+        polygon_points = np.array(points_idx, 'int32')
+        img_shape = (map.info.width, map.info.height, 3)
+        cc, rr = polygon(polygon_points[:,0], polygon_points[:,1], img_shape)
+        # transform result back to map server coordinate system    
+        rr = np.array([map.info.height - r for r in rr], 'uint32')
+        return rr, cc
+
+    def get_circle_indices(self, map, point, radius):
+        px_idx = int((point[0] - map.info.origin.position.x) // map.info.resolution)
+        py_idx = map.info.height - int((point[1] - map.info.origin.position.y) // map.info.resolution)
+        radius_idx = int(radius // map.info.resolution)
+        img_shape = (map.info.width, map.info.height, 3)
+        cc, rr = circle_perimeter(px_idx, py_idx, radius_idx, shape=img_shape)
+        # transform result back to map server coordinate system    
+        rr = np.array([map.info.height - r for r in rr], 'uint32')
+        return rr, cc
 
     def _generate_dynamic_obstacle_yaml_tween2(self, obstacle_name: str, obstacle_radius: float, linear_velocity: float, waypoints: list, is_waypoint_relative: bool,  mode: str, trigger_zones: list):
         """generate a yaml file in which the movement of the obstacle is controller by the plugin tween2
@@ -380,7 +460,9 @@ class ObstaclesManager:
         f["collision"] = 'true'
         f["sensor"] = "false"
         f["type"] = "polygon"
-        f["points"] = vertices.astype(np.float).tolist()
+        points = vertices.astype(np.float).tolist()
+
+        f["points"] = points
 
         body["footprints"].append(f)
         # define dict_file
@@ -440,7 +522,7 @@ class ObstaclesManager:
             min_obstacle_radius (float, optional): Defaults to 0.5.
             max_obstacle_radius (float, optional): Defaults to 1.5.
         """
-
+        polygon_points = []
         # since flatland  can only config the model by parsing the yaml file, we need to create a file for every random obstacle
         tmp_folder_path = os.path.join(rospkg.RosPack().get_path(
             'simulator_setup'), 'tmp_random_obstacles')
@@ -474,6 +556,8 @@ class ObstaclesManager:
             f["type"] = "circle"
             f["radius"] = random.uniform(
                 min_obstacle_radius, max_obstacle_radius)
+            polygon_points = None
+            circle_radius = f["radius"]
         else:
             f["type"] = "polygon"
             f["points"] = []
@@ -497,10 +581,13 @@ class ObstaclesManager:
             points = None
             while points is None:
                 angles = 2*np.pi*np.random.random(num_vertices)
+                angles = sorted(angles)
                 points = np.array([np.cos(angles), np.sin(angles)]).T
                 if not min_dist_check_passed(points):
                     points = None
             f['points'] = points.tolist()
+            polygon_points = f['points']
+            circle_radius = None
 
         body["footprints"].append(f)
         # define dict_file
@@ -518,7 +605,8 @@ class ObstaclesManager:
             yaml.dump(dict_file, fd)
         with open(yaml_path, 'w') as fd:
             yaml.dump(dict_file, fd)
-        return yaml_path
+        
+        return yaml_path, polygon_points, circle_radius
 
     def remove_obstacle(self, name: str):
         if len(self.obstacle_name_list) != 0:

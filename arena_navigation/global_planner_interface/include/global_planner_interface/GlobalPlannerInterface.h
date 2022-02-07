@@ -10,6 +10,8 @@
 #include "nav_core/base_global_planner.h"
 #include <tf2_ros/transform_listener.h>
 #include "global_planner_interface/MakeGlobalPlan.h"
+#include "global_planner_interface/MakeGlobalPlanFull.h"
+#include "global_planner_interface/ResetCostmap.h"
 #include "std_srvs/Empty.h"
 #include <ros/console.h>
 
@@ -20,8 +22,11 @@ public:
     bool makeNewPlanCallback(global_planner_interface::MakeGlobalPlan::Request &req,
                              global_planner_interface::MakeGlobalPlan::Response &rep);
 
-    bool resetCostmapCallback(std_srvs::Empty::Request& request,
-                              std_srvs::Empty::Response& response);
+    bool makeNewPlanFullCallback(global_planner_interface::MakeGlobalPlanFull::Request &req,
+                             global_planner_interface::MakeGlobalPlanFull::Response &rep);
+
+    bool resetCostmapCallback(global_planner_interface::ResetCostmap::Request& request,
+                              global_planner_interface::ResetCostmap::Response& response);
 
 private:
     void reset_costmap();
@@ -39,6 +44,7 @@ private:
     ros::Time _time_last_resetted;
 
     ros::ServiceServer _getGlobalPlan;
+    ros::ServiceServer _getGlobalPlanFull;
     ros::ServiceServer _resetCostmap;
 };
 

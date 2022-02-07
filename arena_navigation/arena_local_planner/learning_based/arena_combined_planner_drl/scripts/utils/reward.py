@@ -15,6 +15,7 @@ class RewardCalculator:
         collision_tolerance: float,
         rule: str = "rule_00",
         extended_eval: bool = False,
+        max_timesteps: int = 500
     ):
         """
         A class for calculating reward based various rules.
@@ -37,8 +38,8 @@ class RewardCalculator:
         self.safe_dist = safe_dist
         self.collision_tolerance = collision_tolerance
         self._extended_eval = extended_eval
-        
-        self._prior_path_lengths = deque(maxlen=10)
+        self._max_timesteps = max_timesteps
+        self._prior_path_lengths = deque(maxlen=20)
 
         self.kdtree = None
 
@@ -70,7 +71,7 @@ class RewardCalculator:
         self.info = {}
         self._reward_composition = {
             "time consumption" : 0,
-            "path length" : 0,
+            "reduced path length" : 0,
             "goal reached" : 0,
             "goal approached" : 0,
             "collision" : 0,
@@ -209,42 +210,36 @@ class RewardCalculator:
         *args,
         **kwargs
     ):
-        self._reward_distance_traveled(kwargs["action"], consumption_factor=0.05)
-        self._reward_abrupt_direction_change(kwargs["action"], punishment_weight=800)
-        self._reward_following_global_plan(
-            kwargs["global_plan"], kwargs["robot_pose"], kwargs["action"]
-        )
-        if laser_scan.min() > self.safe_dist:
-            self._reward_distance_global_plan(
-                kwargs["global_plan"],
-                kwargs["robot_pose"],
-                reward_factor=0.2,
-                penalty_factor=0.3,
-            )
-        else:
-            self.last_dist_to_path = None
-        # as the agent only gets the subgoal as input, reaching the goal is only necessary for finishing episode
-        self._reward_goal_reached(goal_in_robot_frame, reward_factor=30)
-        self._reward_goal_approached(goal_in_robot_frame, reward_factor=0.3, penalty_factor=0.4)
-        self._reward_safe_dist(laser_scan, punishment_factor=0.25)
-        self._reward_collision(laser_scan, punishment_factor=15)
-        self._reward_path_length(kwargs["global_plan_length"], reward_factor=0.01)
-        self._reward_time_consumption(kwargs["episode_steps_passed"], punishment_factor=0.005)
+        self._reward_distance_traveled(kwargs["action"], consumption_factor=0.04)
+        self._reward_abrupt_direction_change(kwargs["action"], punishment_weight=1000)
+        self._reward_goal_reached(goal_in_robot_frame, reward_factor=45)
+        self._reward_goal_approached(goal_in_robot_frame, reward_factor=0.8, penalty_factor=0.5)
+        self._reward_safe_dist(laser_scan, punishment_factor=1.25)
+        self._reward_collision(laser_scan, punishment_factor=50)
+        self._reward_reduced_path_length(kwargs["global_plan_length"], reward_factor=0.01)
+        self._reward_time_consumption(kwargs["episode_steps_passed"], max_punishment=30)
         rospy.logdebug(self._reward_composition)
         self.curr_reward = sum(self._reward_composition.values())
     
-    def _reward_time_consumption(self, steps_passed, punishment_factor=0.005):
-        """ punishes the agent if it takes more and more timesteps to reach the goal """
-        reward = 0.01*steps_passed**1.25 * -punishment_factor
+    def _reward_time_consumption(self, steps_passed, max_punishment=30):
+        """ punishes the agent if it takes more and more timesteps to reach the goal based on """
+        # calculate a factor based on "sum(i^2)_i=1_to_n = (n(n+1)(2n+1))/6"
+        # the reward sum over all timesteps to max_timesteps shall be equal to max_punishment 
+        factor = max_punishment / ((self._max_timesteps * (self._max_timesteps + 1) * (2 * self._max_timesteps + 1))/6)
+        reward = -factor * steps_passed**2
         self._reward_composition["time consumption"] = reward
         return reward
     
-    def _reward_path_length(self, current_length, reward_factor=1):
-        if not self._prior_path_lengths:
-            self._prior_path_lengths.append(current_length)
-            return 0
-        reward = (np.mean(self._prior_path_lengths) - current_length) * reward_factor
-        self._reward_composition["path length"] = reward
+    def _reward_reduced_path_length(self, current_length, reward_factor=1):
+        reward = 0
+        if self._prior_path_lengths:
+            step = 1/len(self._prior_path_lengths)
+            for i, prior_length in enumerate(self._prior_path_lengths):
+                reward += (prior_length - current_length) * (i+1) * step 
+
+        self._prior_path_lengths.append(current_length)
+        reward *= reward_factor
+        self._reward_composition["reduced path length"] = reward
         return reward
 
 
@@ -407,6 +402,7 @@ class RewardCalculator:
         robot_pose: Pose2D,
         action: np.array = None,
         dist_to_path: float = 0.5,
+        reward_factor: float = 0.1
     ):
         """
         Reward for travelling on the global plan.
@@ -423,7 +419,7 @@ class RewardCalculator:
             )
 
             if curr_dist_to_path <= dist_to_path:
-                reward = 0.1 * action[0]
+                reward = reward_factor * action[0]
         self._reward_composition["following global plan"] = reward
         return reward
 

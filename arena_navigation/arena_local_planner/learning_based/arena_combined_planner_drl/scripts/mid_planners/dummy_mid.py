@@ -24,3 +24,6 @@ class Dummy(MidPlanner):
     
     def is_ready(self):
         return True
+
+    def reset(self):
+        pass

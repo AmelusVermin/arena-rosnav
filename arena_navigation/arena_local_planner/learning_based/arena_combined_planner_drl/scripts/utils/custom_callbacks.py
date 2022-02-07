@@ -106,6 +106,7 @@ class InitiateNewTrainStage(BaseCallback):
                     "results might not represent agent performance well"
                     % EvalObject.n_eval_episodes
                 )
+            self.log_curr_stage(EvalObject)
             if (
                 self.threshhold_type == "rew"
                 and EvalObject.best_mean_reward <= self.lower_threshold
@@ -115,8 +116,6 @@ class InitiateNewTrainStage(BaseCallback):
             ):
                 for i, pub in enumerate(self._publishers_previous):
                     pub.publish(self._trigger)
-                    if i == 0:
-                        self.log_curr_stage(EvalObject)
             if (
                 self.threshhold_type == "rew"
                 and EvalObject.best_mean_reward >= self.upper_threshold
@@ -130,15 +129,15 @@ class InitiateNewTrainStage(BaseCallback):
 
                 for i, pub in enumerate(self._publishers_next):
                     pub.publish(self._trigger)
-                    if i == 0:
-                        self.log_curr_stage(EvalObject)
+            
+            
 
-    def log_curr_stage(self, eval_object):
+    def log_curr_stage(self, EvalObject: EvalCallback):
         time.sleep(1)
         curr_stage = rospy.get_param("/curr_stage", -1)
-        #logger.logkv("train_stage/stage_idx", curr_stage)
-        summary = tf.Summary(value=[tf.Summary.Value(tag="train_stage/stage_idx", simple_value=curr_stage)])
-        eval_object.locals['writer'].add_summary(summary, eval_object.num_timesteps)
+        EvalObject.tb_log_value("train_stage/stage_x=trainsteps", curr_stage, EvalObject.num_timesteps)
+        EvalObject.tb_log_value("train_stage/stage_x=evalcalls", curr_stage, EvalObject.eval_calls)
+        
 
 class StopTrainingOnRewardThreshold(BaseCallback):
     """
@@ -297,7 +296,7 @@ class EvalCallback(EventCallback):
                 self._is_success_buffer.append(maybe_is_success)
         
             self._buffer_info_value(info, "time consumption", self._rw_time_consumption)
-            self._buffer_info_value(info, "path length", self._rw_path_length)
+            self._buffer_info_value(info, "reduced path length", self._rw_path_length)
             self._buffer_info_value(info, "goal reached", self._rw_goal_reached)
             self._buffer_info_value(info, "goal approached", self._rw_goal_approached)
             self._buffer_info_value(info, "collision", self._rw_collision)
@@ -390,7 +389,7 @@ class EvalCallback(EventCallback):
                 mean_ep_length, self.num_timesteps)
             self.tb_log_value("eval_x=trainsteps_rw_comp/time_consumption", 
                 mean_rw_time_consumption, self.num_timesteps)
-            self.tb_log_value("eval_x=trainsteps_rw_comp/path_length", 
+            self.tb_log_value("eval_x=trainsteps_rw_comp/reduced_path_length", 
                 mean_rw_path_length, self.num_timesteps)
             self.tb_log_value("eval_x=trainsteps_rw_comp/goal_reached", 
                 mean_rw_goal_reached, self.num_timesteps)
@@ -446,6 +445,7 @@ class EvalCallback(EventCallback):
                 self.tb_log_value("eval_x=evalcalls/success_rate", success_rate, self.eval_calls)
                 self.last_success_rate = success_rate
 
+            print(f"new reward: {mean_reward}, best reward in this stage so far: {self.best_mean_reward}")
             if mean_reward > self.best_mean_reward:
                 if self.verbose > 0:
                     print("New best mean reward!")
@@ -454,6 +454,8 @@ class EvalCallback(EventCallback):
                     if isinstance(self.train_env, VecNormalize):
                         self.train_env.save(
                             os.path.join(self.best_model_save_path, "vec_normalize.pkl"))
+                    with open(os.path.join(self.best_model_save_path, "save_best_model_timesteps.txt"), 'a+') as f:
+                        f.write(f"n_calls: {self.n_calls}, eval_calls: {self.eval_calls}\n")
                 self.best_mean_reward = mean_reward
                 new_best = True
 

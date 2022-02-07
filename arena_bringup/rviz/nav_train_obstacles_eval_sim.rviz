@@ -9,7 +9,7 @@ Panels:
         - /TF1/Frames1
         - /stat_obstacle_001/Namespaces1
       Splitter Ratio: 0.6526610255241394
-    Tree Height: 857
+    Tree Height: 1146
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -244,7 +244,7 @@ Visualization Manager:
       Marker Topic: /eval_sim/flatland_server/debug/model/myrobot
       Name: my_robot
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/TF
@@ -260,6 +260,48 @@ Visualization Manager:
           Value: true
         map:
           Value: true
+        sim_10_base_footprint:
+          Value: false
+        sim_10_laser_link:
+          Value: false
+        sim_10_odom:
+          Value: false
+        sim_11_base_footprint:
+          Value: false
+        sim_11_laser_link:
+          Value: false
+        sim_11_odom:
+          Value: false
+        sim_12_base_footprint:
+          Value: false
+        sim_12_laser_link:
+          Value: false
+        sim_12_odom:
+          Value: false
+        sim_13_base_footprint:
+          Value: false
+        sim_13_laser_link:
+          Value: false
+        sim_13_odom:
+          Value: false
+        sim_14_base_footprint:
+          Value: false
+        sim_14_laser_link:
+          Value: false
+        sim_14_odom:
+          Value: false
+        sim_15_base_footprint:
+          Value: false
+        sim_15_laser_link:
+          Value: false
+        sim_15_odom:
+          Value: false
+        sim_16_base_footprint:
+          Value: false
+        sim_16_laser_link:
+          Value: false
+        sim_16_odom:
+          Value: false
         sim_1_base_footprint:
           Value: false
         sim_1_laser_link:
@@ -278,6 +320,42 @@ Visualization Manager:
           Value: false
         sim_3_odom:
           Value: false
+        sim_4_base_footprint:
+          Value: false
+        sim_4_laser_link:
+          Value: false
+        sim_4_odom:
+          Value: false
+        sim_5_base_footprint:
+          Value: false
+        sim_5_laser_link:
+          Value: false
+        sim_5_odom:
+          Value: false
+        sim_6_base_footprint:
+          Value: false
+        sim_6_laser_link:
+          Value: false
+        sim_6_odom:
+          Value: false
+        sim_7_base_footprint:
+          Value: false
+        sim_7_laser_link:
+          Value: false
+        sim_7_odom:
+          Value: false
+        sim_8_base_footprint:
+          Value: false
+        sim_8_laser_link:
+          Value: false
+        sim_8_odom:
+          Value: false
+        sim_9_base_footprint:
+          Value: false
+        sim_9_laser_link:
+          Value: false
+        sim_9_odom:
+          Value: false
       Marker Scale: 1
       Name: TF
       Show Arrows: false
@@ -288,6 +366,34 @@ Visualization Manager:
           eval_sim_odom:
             eval_sim_base_footprint:
               eval_sim_laser_link:
+                {}
+          sim_10_odom:
+            sim_10_base_footprint:
+              sim_10_laser_link:
+                {}
+          sim_11_odom:
+            sim_11_base_footprint:
+              sim_11_laser_link:
+                {}
+          sim_12_odom:
+            sim_12_base_footprint:
+              sim_12_laser_link:
+                {}
+          sim_13_odom:
+            sim_13_base_footprint:
+              sim_13_laser_link:
+                {}
+          sim_14_odom:
+            sim_14_base_footprint:
+              sim_14_laser_link:
+                {}
+          sim_15_odom:
+            sim_15_base_footprint:
+              sim_15_laser_link:
+                {}
+          sim_16_odom:
+            sim_16_base_footprint:
+              sim_16_laser_link:
                 {}
           sim_1_odom:
             sim_1_base_footprint:
@@ -301,6 +407,30 @@ Visualization Manager:
             sim_3_base_footprint:
               sim_3_laser_link:
                 {}
+          sim_4_odom:
+            sim_4_base_footprint:
+              sim_4_laser_link:
+                {}
+          sim_5_odom:
+            sim_5_base_footprint:
+              sim_5_laser_link:
+                {}
+          sim_6_odom:
+            sim_6_base_footprint:
+              sim_6_laser_link:
+                {}
+          sim_7_odom:
+            sim_7_base_footprint:
+              sim_7_laser_link:
+                {}
+          sim_8_odom:
+            sim_8_base_footprint:
+              sim_8_laser_link:
+                {}
+          sim_9_odom:
+            sim_9_base_footprint:
+              sim_9_laser_link:
+                {}
       Update Interval: 0
       Value: true
     - Class: rviz/MarkerArray
@@ -308,7 +438,7 @@ Visualization Manager:
       Marker Topic: /eval_sim/flatland_server/debug/layer/static_3d
       Name: static_layer_3d
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -316,7 +446,7 @@ Visualization Manager:
       Marker Topic: /eval_sim/flatland_server/debug/layer/static
       Name: static_layer
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -724,6 +854,198 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_16
+      Name: dyn_obstacle_16
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_17
+      Name: dyn_obstacle_17
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_18
+      Name: dyn_obstacle_18
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_19
+      Name: dyn_obstacle_19
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_20
+      Name: dyn_obstacle_20
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_21
+      Name: dyn_obstacle_21
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_22
+      Name: dyn_obstacle_22
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_23
+      Name: dyn_obstacle_23
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_24
+      Name: dyn_obstacle_24
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_25
+      Name: dyn_obstacle_25
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_26
+      Name: dyn_obstacle_26
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_27
+      Name: dyn_obstacle_27
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_28
+      Name: dyn_obstacle_28
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_29
+      Name: dyn_obstacle_29
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_30
+      Name: dyn_obstacle_30
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_31
+      Name: dyn_obstacle_31
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_32
+      Name: dyn_obstacle_32
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_33
+      Name: dyn_obstacle_33
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_34
+      Name: dyn_obstacle_34
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_35
+      Name: dyn_obstacle_35
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_36
+      Name: dyn_obstacle_36
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_37
+      Name: dyn_obstacle_37
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_38
+      Name: dyn_obstacle_38
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_dynamic_39
+      Name: dyn_obstacle_39
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
       Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_00
       Name: stat_obstacle_00
       Namespaces:
@@ -850,6 +1172,208 @@ Visualization Manager:
         {}
       Queue Size: 100
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_16
+      Name: stat_obstacle_16
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_17
+      Name: stat_obstacle_17
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_18
+      Name: stat_obstacle_18
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_19
+      Name: stat_obstacle_19
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_20
+      Name: stat_obstacle_20
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_21
+      Name: stat_obstacle_21
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_22
+      Name: stat_obstacle_22
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_23
+      Name: stat_obstacle_23
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_24
+      Name: stat_obstacle_24
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_25
+      Name: stat_obstacle_25
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_26
+      Name: stat_obstacle_26
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_27
+      Name: stat_obstacle_27
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_28
+      Name: stat_obstacle_28
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_29
+      Name: stat_obstacle_29
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_30
+      Name: stat_obstacle_30
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_31
+      Name: stat_obstacle_31
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_32
+      Name: stat_obstacle_32
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_33
+      Name: stat_obstacle_33
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_34
+      Name: stat_obstacle_34
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_35
+      Name: stat_obstacle_35
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_36
+      Name: stat_obstacle_36
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_37
+      Name: stat_obstacle_37
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_38
+      Name: stat_obstacle_38
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /eval_sim/flatland_server/debug/model/obstacle__random_static_39
+      Name: stat_obstacle_39
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic: /eval_sim/ROS_global_planner/global_costmap/costmap
+      Unreliable: false
+      Use Timestamp: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 0; 0; 0
@@ -886,19 +1410,19 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 16.664413452148438
+      Scale: 48.8397102355957
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
-      X: 6.239133834838867
-      Y: 7.363678932189941
+      X: 8.713186264038086
+      Y: 3.964939594268799
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1080
+  Height: 1369
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd00000004000000000000018f000003e2fc0200000005fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000198000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003b000003e2000000c700ffffff000000010000010f00000270fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000002800000270000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004a00000003efc0100000002fb0000000800540069006d00650000000000000004a00000042700fffffffb0000000800540069006d00650100000000000004500000000000000000000002f8000003e200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000018f00000503fc0200000005fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000198000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003b00000503000000c700ffffff000000010000010f00000270fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000002800000270000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004a00000003efc0100000002fb0000000800540069006d00650000000000000004a00000024400fffffffb0000000800540069006d006501000000000000045000000000000000000000086b0000050300000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -907,6 +1431,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 1165
-  X: 863
-  Y: 913
+  Width: 2560
+  X: 0
+  Y: 743

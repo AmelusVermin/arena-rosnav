@@ -60,3 +60,6 @@ class IntermediatePlanner(MidPlanner):
             return True
         except rospy.ROSException as e:
             return False
+
+    def reset(self):
+        pass

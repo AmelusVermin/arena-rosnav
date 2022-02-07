@@ -29,7 +29,7 @@ from pedsim_msgs.msg import Ped
 from pedsim_msgs.msg import InteractiveObstacle
 from pedsim_msgs.msg import LineObstacles
 from pedsim_msgs.msg import LineObstacle
-
+import time
 import sys
 
 arena_tools_path = (
@@ -72,9 +72,10 @@ class RandomTask(ABSTask):
     """Evertime the start position and end position of the robot is reset."""
 
     def __init__(
-        self, obstacles_manager: ObstaclesManager, robot_manager: RobotManager
+        self, obstacles_manager: ObstaclesManager, robot_manager: RobotManager, min_dist: float = 1
     ):
         super().__init__(obstacles_manager, robot_manager)
+        self._min_dist = min_dist
 
     def reset(self):
         """[summary]"""
@@ -83,30 +84,36 @@ class RandomTask(ABSTask):
             fail_times = 0
             while fail_times < max_fail_times:
                 try:
+                    
+                    self.obstacles_manager.reset_pos_obstacles_random(
+                        forbidden_zones=[
+                            # (
+                            #     start_pos.x,
+                            #     start_pos.y,
+                            #     self.robot_manager.ROBOT_RADIUS,
+                            # ),
+                            # (
+                            #     goal_pos.x,
+                            #     goal_pos.y,
+                            #     self.robot_manager.ROBOT_RADIUS,
+                            # ),
+                        ]
+                    )
                     (
                         start_pos,
                         goal_pos,
-                    ) = self.robot_manager.set_start_pos_goal_pos()
-                    self.obstacles_manager.reset_pos_obstacles_random(
-                        forbidden_zones=[
-                            (
-                                start_pos.x,
-                                start_pos.y,
-                                self.robot_manager.ROBOT_RADIUS,
-                            ),
-                            (
-                                goal_pos.x,
-                                goal_pos.y,
-                                self.robot_manager.ROBOT_RADIUS,
-                            ),
-                        ]
-                    )
+                    ) = self.robot_manager.set_start_pos_goal_pos(min_dist=self._min_dist)
                     break
                 except rospy.ServiceException as e:
+                    # reset map to original one to clean the objects of last iteration
+                    self.obstacles_manager.publish_original_map()
                     rospy.logwarn(repr(e))
                     fail_times += 1
             if fail_times == max_fail_times:
                 raise Exception("reset error!")
+            # resetting is done, so reset to original map without the unknown objects for the planner
+            self.obstacles_manager.publish_original_map()
+            
 
 
 class ManualTask(ABSTask):
@@ -167,9 +174,10 @@ class StagedRandomTask(RandomTask):
         obstacles_manager: ObstaclesManager,
         robot_manager: RobotManager,
         start_stage: int = 1,
+        min_dist: float = 1,
         PATHS=None,
     ):
-        super().__init__(obstacles_manager, robot_manager)
+        super().__init__(obstacles_manager, robot_manager, min_dist=min_dist)
         self.ns = ns
         self.ns_prefix = "" if ns == "" else "/" + ns + "/"
 
@@ -208,7 +216,7 @@ class StagedRandomTask(RandomTask):
         self._initiate_stage()
 
     def next_stage(self, msg: Bool):
-        print("next stage")
+        print(f"{self.ns}:change to next stage")
         if self._curr_stage < len(self._stages):
             self._curr_stage = self._curr_stage + 1
             self._initiate_stage()
@@ -226,6 +234,7 @@ class StagedRandomTask(RandomTask):
             )
 
     def previous_stage(self, msg: Bool):
+        print(f"{self.ns}:change to previous stage")
         if self._curr_stage > 1:
             rospy.set_param("/last_stage_reached", False)
 
@@ -650,7 +659,7 @@ def get_scenario_file_format(path: str):
 
 
 def get_predefined_task(
-    ns: str, mode="random", start_stage: int = 1, PATHS: dict = None
+    ns: str, mode="random", start_stage: int = 1, min_dist: float = 1, PATHS: dict = None, global_planner = None
 ):
 
     # TODO extend get_predefined_task(mode="string") such that user can choose between task, if mode is
@@ -673,7 +682,8 @@ def get_predefined_task(
     robot_manager = RobotManager(
         ns,
         map_response.map,
-        os.path.join(models_folder_path, "robot", "myrobot.model.yaml"),
+        os.path.join(models_folder_path, "robot", "myrobot.model.yaml"), 
+        global_planner=global_planner
     )
 
     obstacles_manager = ObstaclesManager(ns, map_response.map)
@@ -690,7 +700,7 @@ def get_predefined_task(
     if mode == "random":
         rospy.set_param("/task_mode", "random")
         obstacles_manager.register_random_obstacles(20, 0.4)
-        task = RandomTask(obstacles_manager, robot_manager)
+        task = RandomTask(obstacles_manager, robot_manager, min_dist=min_dist)
         print("random tasks requested")
     if mode == "manual":
         rospy.set_param("/task_mode", "manual")
@@ -700,7 +710,7 @@ def get_predefined_task(
     if mode == "staged":
         rospy.set_param("/task_mode", "staged")
         task = StagedRandomTask(
-            ns, obstacles_manager, robot_manager, start_stage, PATHS
+            ns, obstacles_manager, robot_manager, start_stage, min_dist=min_dist, PATHS=PATHS
         )
     if mode == "scenario":
         rospy.set_param("/task_mode", "scenario")

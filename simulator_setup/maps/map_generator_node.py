@@ -121,9 +121,6 @@ class MapGenerator:
         self.obstacle_number = rospy.get_param("~obstacle_number")
         self.obstacle_extra_radius = rospy.get_param("~obstacle_extra_radius")
 
-        
-
-
 if __name__ == '__main__':
     rospy.init_node('map_generator')
     # if rospy.get_param("map_file") == "random_map":

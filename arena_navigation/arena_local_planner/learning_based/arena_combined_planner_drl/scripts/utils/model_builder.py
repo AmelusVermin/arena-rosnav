@@ -49,6 +49,7 @@ class ModelBuilder:
                         seed=args.seed,
                         tensorboard_log=save_paths['tensorboard'],
                         verbose=args.train_verbose,
+                        n_cpu_tf_sess=args.n_cpu_tf_sess
                     )
             elif args.agent_type == "CUSTOM_MLP_LN_LSTM":
                 # get network architecture
@@ -56,7 +57,7 @@ class ModelBuilder:
                 model = PPO2(
                         "MlpLnLstmPolicy",
                         env,
-                        policy_kwargs=dict(net_arch=net_arch, act_fun=get_act_fn(args.act_fn)),
+                        policy_kwargs=dict(net_arch=net_arch, act_fun=get_act_fn(args.act_fn), n_lstm=args.number_lstm_cells),
                         gamma=args.gamma,
                         n_steps=args.n_steps,
                         ent_coef=args.ent_coef,
@@ -70,6 +71,7 @@ class ModelBuilder:
                         seed=args.seed,
                         tensorboard_log=save_paths['tensorboard'],
                         verbose=args.train_verbose,
+                        n_cpu_tf_sess=args.n_cpu_tf_sess
                     )
             # build a Base Agent PPO model
             elif args.agent_type in PolicyRegistry.get_all_registered_policies():
@@ -90,6 +92,7 @@ class ModelBuilder:
                         seed=args.seed,
                         tensorboard_log=save_paths['tensorboard'],
                         verbose=args.train_verbose,
+                        n_cpu_tf_sess=args.n_cpu_tf_sess
                     )
             else :
                 raise NameError(f"Agent type {args.agent_type} is not specified for building!")
@@ -117,22 +120,15 @@ class ModelBuilder:
         Parameters:
             model (PPO): loaded PPO agent
             args (argparse.Namespace): conatins training related parameters and the number of environments
-            n_envs (int): number of parallel environments
         """
         
-        model.batch_size = args.batch_size
+        model.n_batch = args.n_steps * args.n_envs
         model.gamma = args.gamma
         model.n_steps = args.n_steps
         model.ent_coef = args.ent_coef
         model.learning_rate = args.learning_rate
         model.vf_coef = args.vf_coef
         model.max_grad_norm = args.max_grad_norm
-        model.gae_lambda = args.gae_lambda
-        model.n_epochs = args.n_epochs
-        """
-        if model.clip_range != params['clip_range']:
-            model.clip_range = params['clip_range']
-        """
-        if model.n_envs != args.n_envs:
-            model.update_n_envs() 
-        model.rollout_buffer.buffer_size = args.n_steps
+        model.lam = args.gae_lambda
+        model.noptepochs = args.n_epochs
+        model.nminibatches=args.mini_batch_size
