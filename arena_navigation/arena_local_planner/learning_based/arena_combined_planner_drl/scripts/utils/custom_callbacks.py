@@ -226,7 +226,7 @@ class EvalCallback(EventCallback):
         n_eval_episodes: int = 5,
         eval_freq: int = 10000,
         log_path: str = None,
-        best_model_save_path: str = None,
+        model_save_path: str = None,
         deterministic: bool = True,
         render: bool = False,
         verbose: int = 1,
@@ -253,7 +253,7 @@ class EvalCallback(EventCallback):
 
         self.eval_env = eval_env
         self.train_env = train_env
-        self.best_model_save_path = best_model_save_path
+        self.model_save_path = model_save_path
         # Logs will be written in ``evaluations.npz``
         if log_path is not None:
             log_path = os.path.join(log_path, "evaluations")
@@ -271,8 +271,16 @@ class EvalCallback(EventCallback):
             warnings.warn("Training and eval env are not of the same type" f"{self.training_env} != {self.eval_env}")
 
         # Create folders if needed
+        if self.model_save_path is not None:
+            self.best_model_save_path = os.path.join(self.model_save_path, "best_model")
+            self.newest_model_save_path = os.path.join(self.model_save_path, "newest_model")
+        
+        if self.model_save_path is not None:
+            os.makedirs(self.model_save_path, exist_ok=True)
         if self.best_model_save_path is not None:
             os.makedirs(self.best_model_save_path, exist_ok=True)
+        if self.newest_model_save_path is not None:
+            os.makedirs(self.newest_model_save_path, exist_ok=True)
         if self.log_path is not None:
             os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
 
@@ -445,11 +453,12 @@ class EvalCallback(EventCallback):
                 self.tb_log_value("eval_x=evalcalls/success_rate", success_rate, self.eval_calls)
                 self.last_success_rate = success_rate
 
+            # save best model
             print(f"new reward: {mean_reward}, best reward in this stage so far: {self.best_mean_reward}")
             if mean_reward > self.best_mean_reward:
                 if self.verbose > 0:
                     print("New best mean reward!")
-                if self.best_model_save_path is not None:
+                if self.model_save_path is not None:
                     self.model.save(os.path.join(self.best_model_save_path, "best_model"))
                     if isinstance(self.train_env, VecNormalize):
                         self.train_env.save(
@@ -458,6 +467,15 @@ class EvalCallback(EventCallback):
                         f.write(f"n_calls: {self.n_calls}, eval_calls: {self.eval_calls}\n")
                 self.best_mean_reward = mean_reward
                 new_best = True
+            
+            # save newest model
+            if self.model_save_path is not None:
+                self.model.save(os.path.join(self.newest_model_save_path, "newest_model"))
+                if isinstance(self.train_env, VecNormalize):
+                    self.train_env.save(
+                        os.path.join(self.newest_model_save_path, "vec_normalize.pkl"))
+                with open(os.path.join(self.newest_model_save_path, "newest_best_model_timesteps.txt"), 'a+') as f:
+                    f.write(f"n_calls: {self.n_calls}, eval_calls: {self.eval_calls}\n")
 
             if self.callback_on_eval_end is not None:
                 self.callback_on_eval_end._on_step(self)

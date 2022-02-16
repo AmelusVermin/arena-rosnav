@@ -37,6 +37,7 @@ if __name__ == '__main__':
     if args.configs_folder is "default":
         args.configs_folder = os.path.join(
             rospkg.RosPack().get_path("arena_combined_planner_drl"), 
+            "configs",
             "configs"
         )
 
@@ -156,7 +157,7 @@ if __name__ == '__main__':
         n_eval_episodes=args.n_eval_episodes,
         eval_freq=args.eval_freq,
         log_path=save_paths['training'],
-        best_model_save_path=save_paths['model'],
+        model_save_path=save_paths['model'],
         deterministic=True,
         callback_on_eval_end=trainstage_cb,
         callback_on_new_best=stoptraining_cb,

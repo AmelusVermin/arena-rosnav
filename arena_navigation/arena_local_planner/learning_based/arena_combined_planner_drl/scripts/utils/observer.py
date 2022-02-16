@@ -78,28 +78,28 @@ class Observer():
 
         # given number of points from global path
         global_plan_path = point * self._num_global_plan_points
-
-        if self._observation_space_type == "FULL_LENGTH":
+        
+        if self._observation_space_type == "BASE_SUB_LENGTH":
             observation_space = Observer._stack_spaces(
                 scan + point + point + global_plan_length
             )
-        elif self._observation_space_type == "FULL_PATH":
+        elif self._observation_space_type == "BASE_SUB_POINTS":
             observation_space = Observer._stack_spaces(
                 scan + point + point + global_plan_path
             )
-        elif self._observation_space_type == "BASE":
+        elif self._observation_space_type == "BASE_NON_NON":
             observation_space = Observer._stack_spaces(
                 scan + point
             )
-        elif self._observation_space_type == "SUBGOAL":
+        elif self._observation_space_type == "BASE_SUB_NON":
             observation_space = Observer._stack_spaces(
                 scan + point + point
             )
-        elif self._observation_space_type == "GLOBAL_LENGTH":
+        elif self._observation_space_type == "BASE_NON_LENGTH":
             observation_space = Observer._stack_spaces(
                 scan + point + global_plan_length
             )
-        elif self._observation_space_type == "GLOBAL_PATH":
+        elif self._observation_space_type == "BASE_NON_POINTS":
             observation_space = Observer._stack_spaces(
                 scan + point + global_plan_path
             )
@@ -202,16 +202,16 @@ class Observer():
         goal_obs = np.array(get_pose_difference(goal_2D, robot_pose_2D))
 
         # prepare subgoal observation
-        if self._observation_space_type in ["FULL_LENGTH", "FULL_PATH", "SUBGOAL"]:
+        if self._observation_space_type in ["BASE_SUB_LENGTH", "BASE_SUB_POINTS", "BASE_SUB_NON"]:
             subgoal_2D = pose3D_to_pose2D(subgoal)
             subgoal_obs = np.array(get_pose_difference(subgoal_2D, robot_pose_2D))
 
         # prepare global plan length observation
-        if self._observation_space_type in ["FULL_LENGTH", "GLOBAL_LENGTH"]:
+        if self._observation_space_type in ["BASE_SUB_LENGTH", "BASE_NON_LENGTH"]:
             length_obs = [global_plan_length]
         
         # prepare global plan path observation
-        if self._observation_space_type in ["FULL_PATH", "GLOBAL_PATH"]:
+        if self._observation_space_type in ["BASE_SUB_POINTS", "BASE_NON_POINTS"]:
             points = []
             rho, theta = 0.0, 0.0
             for i in range(0, self._num_global_plan_points * self._gp_point_skip_rate, self._gp_point_skip_rate):
@@ -223,17 +223,17 @@ class Observer():
             gp_points_obs = np.array(points)
 
         # create agent observation according to observation_space_type
-        if self._observation_space_type == "FULL_LENGTH":
+        if self._observation_space_type == "BASE_SUB_LENGTH":
             observation = np.hstack([scan_obs, goal_obs, subgoal_obs, length_obs])
-        elif self._observation_space_type == "FULL_PATH":
+        elif self._observation_space_type == "BASE_SUB_POINTS":
             observation = np.hstack([scan_obs, goal_obs, subgoal_obs, gp_points_obs])
-        elif self._observation_space_type == "BASE":
+        elif self._observation_space_type == "BASE_NON_NON":
             observation = np.hstack([scan_obs, goal_obs])
-        elif self._observation_space_type == "SUBGOAL":
+        elif self._observation_space_type == "BASE_SUB_NON":
             observation = np.hstack([scan_obs, goal_obs, subgoal_obs])
-        elif self._observation_space_type == "GLOBAL_LENGTH":
+        elif self._observation_space_type == "BASE_NON_LENGTH":
             observation = np.hstack([scan_obs, goal_obs, length_obs])
-        elif self._observation_space_type == "GLOBAL_PATH":
+        elif self._observation_space_type == "BASE_NON_POINTS":
             observation = np.hstack([scan_obs, goal_obs, gp_points_obs])
         else:
             raise ValueError(f"observation_space: {self.observation_space} not known!")
