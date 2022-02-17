@@ -47,7 +47,7 @@ if __name__ == '__main__':
         )
     
     args, save_paths = get_config_arguments(args, settings_file)
-    
+    print(args.task_curriculum_path)
     # -srt flag is set: print the registered agent types and exit
     if args.show_registered_types:
         print_registered_types()
