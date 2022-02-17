@@ -8,10 +8,10 @@
 #    uri: https://github.com/ros-planning/navigation.git
 #    version: melodic-devel
 
-#- git:
-#    local-name: ../forks/geometry2_ws/src/geometry2
-#    uri: https://github.com/ros/geometry2.git
-#    version: melodic-devel
+- git:
+    local-name: ../forks/geometry2_ws/src/geometry2
+    uri: https://github.com/ros/geometry2.git
+    version: melodic-devel
 
 - git:
     local-name: ../forks/stable-baselines3
