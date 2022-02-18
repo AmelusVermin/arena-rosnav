@@ -13,7 +13,7 @@ cd /
 source /root/.bashrc
 
 export PYTHONPATH=""
-source opt/ros/melodic/setup.bash/i 
+source opt/ros/melodic/setup.bash
 export PYTHONPATH=/geometry2_ws/devel/lib/python3/dist-packages:${PYTHONPATH}
 export PYTHONPATH=/catkin_ws/src/arena-rosnav:${PYTHONPATH}
 source catkin_ws/devel/setup.bash
