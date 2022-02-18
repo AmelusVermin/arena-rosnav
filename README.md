@@ -1,3 +1,6 @@
+# Docker
+curl -LJO https://raw.githubusercontent.com/AmelusVermin/arena-rosnav/251913c63e21b5c66ec913303752efbc75e024e1/docker/Dockerfile 
+
 # Arena-Rosnav (IROS 21)
 A flexible, high-performance 2D simulator with configurable agents, multiple sensors, and benchmark scenarios for testing robotic navigation. 
 
