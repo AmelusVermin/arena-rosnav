@@ -5,7 +5,7 @@ from random import seed
 import gym
 from typing import Type
 from stable_baselines import PPO2
-from stable_baselines3.common.base_class import BaseAlgorithm
+from stable_baselines.common.base_class import BaseRLModel
 
 from .nn_utils import get_act_fn, get_net_arch
 from policies.sb_policy_registry import PolicyRegistry
@@ -15,7 +15,7 @@ from policies.sb_policy_registry import PolicyRegistry
 class ModelBuilder:
     
     @staticmethod
-    def get_model(args: argparse.Namespace, save_paths: dict, env: Type[gym.Env]) -> Type[BaseAlgorithm]: 
+    def get_model(args: argparse.Namespace, save_paths: dict, env: Type[gym.Env]) -> Type[BaseRLModel]: 
         """ 
         build or load stable_baseline3 models.
 
