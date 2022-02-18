@@ -13,7 +13,7 @@ environment:
   global_planner_class: "global_planners.ROSGlobalPlanner.ROSGlobalPlanner" #"global_planners.dummy_global.Dummy"
   mid_planner_class: "mid_planners.ignc_intermediate_planner.IntermediatePlanner" #"mid_planners.dummy_mid.Dummy"
   # default: "configs/training_curriculum.yaml"
-  task_curriculum_path: "configs/configs_agent1/training_curriculum.yaml"
+  task_curriculum_path: "configs/configs_agent_1/training_curriculum.yaml"
   # the goal is reached when the robot enters the circle determined by this radius around the goal, the orientation is ignored
   goal_radius: 0.3075
   reward_fnc: "rule_05"
