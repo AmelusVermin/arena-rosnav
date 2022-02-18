@@ -11,7 +11,12 @@ done
 git pull
 cd /
 source /root/.bashrc
-source catkin_ws/devel/setup.bash 
+
+export PYTHONPATH=""
+source opt/ros/melodic/setup.bash/i 
+export PYTHONPATH=/geometry2_ws/devel/lib/python3/dist-packages:${PYTHONPATH}
+export PYTHONPATH=/catkin_ws/src/arena-rosnav:${PYTHONPATH}
+source catkin_ws/devel/setup.bash
 
 roslaunch arena_bringup start_training_2.launch train_mode:=true num_envs:=$num_env map_file:=random_map show_rviz:=false &>/dev/null &
 sleep 5
