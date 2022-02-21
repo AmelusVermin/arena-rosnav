@@ -41,7 +41,7 @@ training:
   train_log_dir: "logs/training_logs"
   tensorboard_log_dir: "logs/tensorboard"
   ## learning related settings
-  batch_size: 19200
+  batch_size: 38400
   gamma: 0.99 
   ent_coef: 0.005 
   learning_rate: 0.0003
@@ -56,7 +56,7 @@ training:
   total_timesteps: 40000000
   train_verbose: 1
   n_cpu_tf_sess: 16
-  seed: 45456
+  seed: 68425
 
 model:
   ## model related settings. Used in model_builder.py
