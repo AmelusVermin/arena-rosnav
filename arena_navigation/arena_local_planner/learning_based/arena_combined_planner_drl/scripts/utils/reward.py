@@ -210,13 +210,13 @@ class RewardCalculator:
         *args,
         **kwargs
     ):
-        self._reward_distance_traveled(kwargs["action"], consumption_factor=0.04)
+        self._reward_distance_traveled(kwargs["action"], consumption_factor=0.025)
         self._reward_abrupt_direction_change(kwargs["action"], punishment_weight=1000)
         self._reward_goal_reached(goal_in_robot_frame, reward_factor=45)
-        self._reward_goal_approached(goal_in_robot_frame, reward_factor=0.8, penalty_factor=0.5)
+        self._reward_goal_approached(goal_in_robot_frame, reward_factor=0.8, penalty_factor=0.6)
         self._reward_safe_dist(laser_scan, punishment_factor=1.25)
         self._reward_collision(laser_scan, punishment_factor=50)
-        self._reward_reduced_path_length(kwargs["global_plan_length"], reward_factor=0.01)
+        self._reward_reduced_path_length(kwargs["global_plan_length"], reward_factor=0.015)
         self._reward_time_consumption(kwargs["episode_steps_passed"], max_punishment=30)
         rospy.logdebug(self._reward_composition)
         self.curr_reward = sum(self._reward_composition.values())
