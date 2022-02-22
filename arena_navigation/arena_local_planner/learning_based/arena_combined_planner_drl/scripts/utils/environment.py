@@ -70,6 +70,7 @@ class FlatlandEnv(gym.Env):
         # observer related inits
         self._observer = Observer(ns, args)
         self.observation_space = self._observer.get_agent_observation_space()
+        rospy.loginfo(f"observation space: {self.observation_space}")
         # action space of agent (local planner)
         self.action_space = spaces.Box(
             low=np.array([args.linear_range[0], args.angular_range[0]]),
@@ -218,13 +219,17 @@ class FlatlandEnv(gym.Env):
 
         # prepare agent observation
         global_plan_length = get_path_length(global_plan_array)
-        observation = self._observer.prepare_agent_observation(
-            robot_pose_2D, scan, global_goal.pose, self._last_subgoal.pose, self._last_global_plan.poses, global_plan_length)
+        
+        obs_dict["global_plan"] = self._last_global_plan
+        obs_dict["subgoal"] = self._last_subgoal
+        observation = self._observer.get_processed_observation(obs_dict)
+
         #subgoal_2D = pose3D_to_pose2D(self._last_subgoal.pose)
         goal_tup = get_pose_difference(
             pose3D_to_pose2D(global_goal.pose), robot_pose_2D)
         subgoal_tup = get_pose_difference(
             pose3D_to_pose2D(self._last_subgoal.pose), robot_pose_2D)
+        
         # calculate reward
         rospy.logdebug(f"ns:{self.ns}, get reward")
         reward, reward_info, reward_composition = self.reward_calculator.get_reward(

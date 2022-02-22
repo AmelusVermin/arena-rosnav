@@ -48,8 +48,7 @@ class ModelBuilder:
                         cliprange=args.clip_range,
                         seed=args.seed,
                         tensorboard_log=save_paths['tensorboard'],
-                        verbose=args.train_verbose,
-                        n_cpu_tf_sess=args.n_cpu_tf_sess
+                        verbose=args.train_verbose
                     )
             elif args.agent_type == "CUSTOM_MLP_LN_LSTM":
                 # get network architecture
@@ -70,8 +69,7 @@ class ModelBuilder:
                         cliprange=args.clip_range,
                         seed=args.seed,
                         tensorboard_log=save_paths['tensorboard'],
-                        verbose=args.train_verbose,
-                        n_cpu_tf_sess=args.n_cpu_tf_sess
+                        verbose=args.train_verbose
                     )
             # build a Base Agent PPO model
             elif args.agent_type in PolicyRegistry.get_all_registered_policies():
@@ -91,8 +89,7 @@ class ModelBuilder:
                         cliprange=args.clip_range,
                         seed=args.seed,
                         tensorboard_log=save_paths['tensorboard'],
-                        verbose=args.train_verbose,
-                        n_cpu_tf_sess=args.n_cpu_tf_sess
+                        verbose=args.train_verbose
                     )
             else :
                 raise NameError(f"Agent type {args.agent_type} is not specified for building!")

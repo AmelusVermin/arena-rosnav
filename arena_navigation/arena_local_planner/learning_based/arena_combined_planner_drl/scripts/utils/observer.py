@@ -11,7 +11,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Path
 from rosgraph_msgs.msg import Clock
 from nav_msgs.msg import Odometry
-from .geometry_utils import pose3D_to_pose2D, get_pose_difference
+from .geometry_utils import pose3D_to_pose2D, get_pose_difference, get_path_length
 
 class Observer():
 
@@ -36,7 +36,9 @@ class Observer():
         self._last_odom = None#Odometry()
         self._odom_deque = deque(maxlen=args.max_deque_size)
         self._last_goal = None#PoseStamped()
-        
+        self._last_global_plan = None
+        self._last_subgoal = None
+
         # syncronization params
         self._sync_slop = args.sync_slop
         self._use_first_synced_obs = args.use_first_synced_obs
@@ -59,6 +61,12 @@ class Observer():
         # global goal
         self._goal_sub = message_filters.Subscriber(f"{self.ns_prefix}goal", PoseStamped)
         self._goal_sub.registerCallback(self._goal_callback)
+
+        self._subgoal_sub = message_filters.Subscriber(f"{self.ns_prefix}subgoal", PoseStamped)
+        self._subgoal_sub.registerCallback(self._subgoal_callback)
+
+        self._globalplan_sub = message_filters.Subscriber(f"{self.ns_prefix}globalPlan", Path)
+        self._globalplan_sub.registerCallback(self._global_plan_callback)
 
     def _prepare_observation_space(self, args):
         
@@ -129,8 +137,16 @@ class Observer():
         """ callback for global goal subscriber """
         self._last_goal = msg_goal
 
+    def _global_plan_callback(self, global_plan_msg):
+        """ callback for global plan subsriber """
+        self._last_global_plan = global_plan_msg
+
+    def _subgoal_callback(self, subgoal_msg):
+        """ callback for subgoal subscriber """
+        self._last_subgoal = subgoal_msg
+
     def get_observation(self):
-        """get current observations from subscribed topics"""
+        """get current observations from subscribed topics excluding global plan and subgoal"""
         # get latest synced scan and odom message, not neccessary if TimeSynchronizer is used
         synced_scan, synced_odom = self.get_sync_obs()
         if synced_scan is not None and synced_odom is not None:
@@ -153,6 +169,13 @@ class Observer():
             "robot_pose": robot_pose2D,
             "twist" : twist
         }
+        return obs_dict
+
+    def get_deployment_observation(self):
+        """ get the current observation from subscribed topics including global plan and subgoal for deployment """
+        obs_dict = self.get_observation()
+        obs_dict["global_plan"] = self._last_global_plan
+        obs_dict["subgoal"] = self._last_subgoal
         return obs_dict
 
     def get_sync_obs(self):
@@ -240,7 +263,22 @@ class Observer():
         
         return observation
     
-    
+    def get_processed_observation(self, obs_dict):
+        """ prepares observation as model input, obs_dict must innclude global plan and subgoal """
+        scan = obs_dict['laser_scan']
+        robot_pose_2D = obs_dict['robot_pose']
+        global_goal = obs_dict['global_goal']
+        global_plan = obs_dict["global_plan"]
+        subgoal = obs_dict["subgoal"]
+
+        # convert global plan Path message to nparray and get length
+        global_plan_array = Observer.process_global_plan_msg(global_plan)
+        global_plan_length = get_path_length(global_plan_array)
+        
+        # prepare agent observation
+        observation = self.prepare_agent_observation(
+            robot_pose_2D, scan, global_goal.pose, subgoal.pose, global_plan.poses, global_plan_length)
+        return observation
 
     def process_scan_msg(self, msg_LaserScan: LaserScan):
         """ remove_nans_from_scan """

@@ -55,7 +55,6 @@ training:
   normalize: True
   total_timesteps: 40000000
   train_verbose: 1
-  n_cpu_tf_sess: 16
   seed: 68425
 
 model:
