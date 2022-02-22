@@ -41,7 +41,7 @@ training:
   train_log_dir: "logs/training_logs"
   tensorboard_log_dir: "logs/tensorboard"
   ## learning related settings
-  batch_size: 38400
+  batch_size: 19200
   gamma: 0.99 
   ent_coef: 0.005 
   learning_rate: 0.0003
@@ -89,9 +89,9 @@ evaluation:
   ## settings related to creating evaluation callback
   model_save_dir: "models/trained/"
   # n_eval_episodes: number of episodes to evaluate agent on
-  n_eval_episodes: 40
+  n_eval_episodes: 30
   # eval_freq: evaluate the agent every eval_freq train timesteps
-  eval_freq: 19200
+  eval_freq: 14400
   deterministic: True
 
 stoptraining:
