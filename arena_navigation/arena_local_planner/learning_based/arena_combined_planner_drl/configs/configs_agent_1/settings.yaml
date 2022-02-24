@@ -8,7 +8,7 @@ robot:
     angular_range: [-2.7, 2.7]
 environment:
   ## settings related to the gym environment
-  max_distance_goal: 100
+  max_distance_goal: 400
   min_dist_goal: 4
   global_planner_class: "global_planners.ROSGlobalPlanner.ROSGlobalPlanner" #"global_planners.dummy_global.Dummy"
   mid_planner_class: "mid_planners.ignc_intermediate_planner.IntermediatePlanner" #"mid_planners.dummy_mid.Dummy"

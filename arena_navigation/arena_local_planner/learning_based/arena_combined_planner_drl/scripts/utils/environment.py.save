@@ -223,7 +223,7 @@ class FlatlandEnv(gym.Env):
         obs_dict["global_plan"] = self._last_global_plan
         obs_dict["subgoal"] = self._last_subgoal
         observation = self._observer.get_processed_observation(obs_dict)
-        
+
         #subgoal_2D = pose3D_to_pose2D(self._last_subgoal.pose)
         goal_tup = get_pose_difference(
             pose3D_to_pose2D(global_goal.pose), robot_pose_2D)
@@ -351,12 +351,10 @@ class FlatlandEnv(gym.Env):
         self._mid_planner_pub.publish(subgoal)
         # convert global plan Path message to nparray
         global_plan_array = Observer.process_global_plan_msg(global_plan)
-        # prepare agent observation
-        
-        obs_dict["global_plan"] = self._last_global_plan
-        obs_dict["subgoal"] = self._last_subgoal
-        observation = self._observer.get_processed_observation(obs_dict)
+        # prepare agent observation        # prepare agent observation
 
+<        observation = self._observer.prepare_agent_observation(
+            robot_pose2D, scan, global_goal.pose, subgoal.pose, global_plan.poses, get_path_length(global_plan_array))
         rospy.loginfo(
             f"{dt.now().strftime('%d.%m %H:%M')}::{self.ns}: reset environment finished!")
         return observation

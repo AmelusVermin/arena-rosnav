@@ -62,11 +62,11 @@ class Observer():
         self._goal_sub = message_filters.Subscriber(f"{self.ns_prefix}goal", PoseStamped)
         self._goal_sub.registerCallback(self._goal_callback)
 
-        self._subgoal_sub = message_filters.Subscriber(f"{self.ns_prefix}subgoal", PoseStamped)
-        self._subgoal_sub.registerCallback(self._subgoal_callback)
+       # self._subgoal_sub = message_filters.Subscriber(f"{self.ns_prefix}subgoal", PoseStamped)
+       # self._subgoal_sub.registerCallback(self._subgoal_callback)
 
-        self._globalplan_sub = message_filters.Subscriber(f"{self.ns_prefix}globalPlan", Path)
-        self._globalplan_sub.registerCallback(self._global_plan_callback)
+       # self._globalplan_sub = message_filters.Subscriber(f"{self.ns_prefix}globalPlan", Path)
+       # self._globalplan_sub.registerCallback(self._global_plan_callback)
 
     def _prepare_observation_space(self, args):
         
