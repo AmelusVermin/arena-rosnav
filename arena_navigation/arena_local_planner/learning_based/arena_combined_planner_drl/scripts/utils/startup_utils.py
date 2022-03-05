@@ -28,8 +28,10 @@ def get_agent_name(args: argparse.Namespace) -> str:
     :param args (argparse.Namespace): Object containing the program arguments
     """
     START_TIME = dt.now().strftime("%Y_%m_%d__%H_%M")
-    if args.load_model:
-        agent_name = (args.model_path.split("/"))[-2]
+    if args.agent_name:
+        agent_name = (args.agent_name + "_" + START_TIME)
+    elif args.load_model:
+        agent_name = (args.model_path.split("/"))[-3]
     else:
         if args.agent_type == "CUSTOM_MLP":
             agent_name = (
@@ -66,6 +68,7 @@ def get_agent_name(args: argparse.Namespace) -> str:
         else:
             agent_name = args.agent_type + "_" + START_TIME
 
+    print(f"agent name:{agent_name}")
     return agent_name
 
 
@@ -139,7 +142,7 @@ def setup_paths(args):
     paths['tensorboard'] = _setup_single_dir(
         args.tensorboard_log_dir, args.agent_name)
     paths['model'] = _setup_single_dir(args.model_save_dir, args.agent_name)
-    paths['curriculum'] = _setup_single_dir(args.task_curriculum_path)
+    paths['curriculum'] = _setup_single_dir(args.configs_folder, args.task_curriculum_path)
     return paths
 
 
