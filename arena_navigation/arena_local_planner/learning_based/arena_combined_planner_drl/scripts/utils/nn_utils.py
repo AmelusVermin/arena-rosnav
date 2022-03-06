@@ -42,7 +42,7 @@ def parse_network_size(string: str):
     for string in string_arr:
         try:
             int_list.append(int(string))
-        except:
+        except Exception:
             raise Exception("Invalid argument format on: " + string)
     return int_list
 
