@@ -121,7 +121,6 @@ RUN source /opt/ros/melodic/setup.bash \
 RUN sed -i '/opt\/ros\/melodic\/setup.bash/i export PYTHONPATH=""' /root/.bashrc 
 RUN echo $'export PYTHONPATH=/geometry2_ws/devel/lib/python3/dist-packages:${PYTHONPATH}\n' >> /root/.bashrc 
 RUN echo $'export PYTHONPATH=/catkin_ws/src/arena-rosnav:${PYTHONPATH}\n' >> /root/.bashrc 
-RUN echo $'source /catkin_ws/devel/setup.bash\n' >> /root/.bashrc 
-RUN echo $'export DISPLAY=192.168.178.36:0.0\n' >> /root/.bashrc
+RUN echo $'source /catkin_ws/devel/setup.bash\n' >> /root/.bashrc
 
 WORKDIR /catkin_ws/src/arena-rosnav/
