@@ -73,19 +73,32 @@ RUN apt-get update \
         libarmadillo-dev \
         ros-melodic-nlopt \
         nano \
-        tmux
+        tmux \
+        htop
 
 # update pip
 RUN pip3 install --upgrade pip
 # install python packages
 RUN pip3 install --extra-index-url https://rospypi.github.io/simple/ rospy rosbag tf tf2_ros --ignore-installed \ 
-&&  pip3 install pyyaml catkin_pkg netifaces pathlib \
-&&  pip3 install stable-baselines \ 
-        stable-baselines3 \
-        tensorflow-gpu==1.15 \
+&&  pip3 install pyyaml \
+        rospkg \
+        catkin_pkg \ 
+        netifaces \ 
+        pathlib \
         filelock \
-        scikit-image \
-        PyQt5 
+        PyQt5 \
+        cloudpickle==1.6.0 \
+        joblib==1.0.1 \
+        matplotlib==3.3.4 \
+        opencv-python==4.5.1.48 \
+        pandas==1.1.5 \
+        scipy==1.5.4 \
+        gym==0.18.0 \
+        scikit-image==0.17.2 \
+        tensorflow-gpu==1.15 \
+        stable-baselines==2.10.2 \
+        imageio==2.9.0 \ 
+        Pillow==7.2.0
 
 
 # load forks and build project
@@ -104,5 +117,11 @@ RUN source /opt/ros/melodic/setup.bash \
 &&  cd catkin_ws \
 &&  catkin_make -DCMAKE_BUILD_TYPE=Release -DPYTHON_EXECUTABLE=/usr/bin/python3 \ 
 &&  source devel/setup.bash
+
+RUN sed -i '/opt\/ros\/melodic\/setup.bash/i export PYTHONPATH=""' /root/.bashrc 
+RUN echo $'export PYTHONPATH=/geometry2_ws/devel/lib/python3/dist-packages:${PYTHONPATH}\n' >> /root/.bashrc 
+RUN echo $'export PYTHONPATH=/catkin_ws/src/arena-rosnav:${PYTHONPATH}\n' >> /root/.bashrc 
+RUN echo $'source /catkin_ws/devel/setup.bash\n' >> /root/.bashrc 
+RUN echo $'export DISPLAY=192.168.178.36:0.0\n' >> /root/.bashrc
 
 WORKDIR /catkin_ws/src/arena-rosnav/
