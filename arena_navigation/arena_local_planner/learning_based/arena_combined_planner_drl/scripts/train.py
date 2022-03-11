@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from distutils.command.config import config
 from random import seed
@@ -47,7 +47,7 @@ if __name__ == '__main__':
         )
     
     args, save_paths = get_config_arguments(args, settings_file)
-    print(args.task_curriculum_path)
+    print(args.eval_freq)
     # -srt flag is set: print the registered agent types and exit
     if args.show_registered_types:
         print_registered_types()
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     # for training with start_arena_flatland.launch
     ros_params = rospy.get_param_names()
     ns_for_nodes = "/single_env" not in ros_params
-    
+    ns_for_nodes = True
     # if no environment number was given on commandline, try to get it from ros
     if args.n_envs <= 0:
         try:

@@ -45,12 +45,12 @@ class Observer():
 
         # define subscribers
         # lidar scan
-        self._scan_sub = message_filters.Subscriber(f"{self.ns_prefix}scan", LaserScan)
+        self._scan_sub = message_filters.Subscriber(f"{self.ns_prefix}scan", LaserScan, queue_size=1)
         # comment out if using TimeSynchronizer instead
         self._scan_sub.registerCallback(self._scan_callback)
         
         # odometry
-        self._odom_sub = message_filters.Subscriber(f"{self.ns_prefix}odom", Odometry)
+        self._odom_sub = message_filters.Subscriber(f"{self.ns_prefix}odom", Odometry, queue_size=1)
         # comment out if using TimeSynchronizer instead
         self._odom_sub.registerCallback(self._odom_callback)
         
@@ -59,7 +59,7 @@ class Observer():
         # self._ts.registerCallback(self._sync_callback)
         
         # global goal
-        self._goal_sub = message_filters.Subscriber(f"{self.ns_prefix}goal", PoseStamped)
+        self._goal_sub = message_filters.Subscriber(f"{self.ns_prefix}goal", PoseStamped, queue_size=1)
         self._goal_sub.registerCallback(self._goal_callback)
 
        # self._subgoal_sub = message_filters.Subscriber(f"{self.ns_prefix}subgoal", PoseStamped)

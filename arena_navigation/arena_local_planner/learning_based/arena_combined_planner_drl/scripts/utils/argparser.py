@@ -16,6 +16,7 @@ def get_commandline_arguments():
     parser.add_argument("--n_envs", '-ne', type=int, default=0, help="number of parallel environments.")
     parser.add_argument("--show_registered_types", '-srt', action="store_true", default=False, help="Prints the available agent types.")
     parser.add_argument("--configs_folder", '-cf', type=str, default="default", help="Loads the given settings files in the given folder instead of default one.")
+    parser.add_argument("--eval_frequency", '-ef', type=int, default=None, help="replaces the eval_freq in settings.yaml")
     args = parser.parse_args()
     args.log_level = LOG_LEVELS[args.log_level]
     return args
@@ -27,7 +28,8 @@ def get_config_arguments(command_line_args: argparse.Namespace, settings_path:st
     # load configs
     args = _add_robot_config(args)
     args = add_yaml_config(args, settings_path)
-
+    if args.eval_frequency:
+        args.eval_freq = args.eval_frequency
     # set agent name
     setattr(args, "agent_name", get_agent_name(args))
     # prepare some paths for logging and saving
