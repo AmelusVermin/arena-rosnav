@@ -89,7 +89,7 @@ evaluation:
   ## settings related to creating evaluation callback
   model_save_dir: "models/trained/"
   # n_eval_episodes: number of episodes to evaluate agent on
-  n_eval_episodes: 40
+  n_eval_episodes: 30
   # eval_freq: evaluate the agent every eval_freq train timesteps
   eval_freq: 19200
   deterministic: True
