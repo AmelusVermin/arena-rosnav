@@ -18,7 +18,7 @@ from .observer import Observer
 from .reward import RewardCalculator
 from .task_manager import TaskManager
 from datetime import datetime as dt
-from pympler import muppy, summary, tracker, refbrowser
+#from pympler import muppy, summary, tracker, refbrowser
 
 class FlatlandEnv(gym.Env):
     """ Custom environment that follows gym interface """
