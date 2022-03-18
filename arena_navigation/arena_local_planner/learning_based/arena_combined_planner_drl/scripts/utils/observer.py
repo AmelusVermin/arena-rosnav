@@ -82,7 +82,7 @@ class Observer():
         )
 
         # length of the global path
-        global_plan_length = (spaces.Box(low=0, high=self._max_distance_goal**2, shape=(1,), dtype=np.float32),)
+        global_plan_length = (spaces.Box(low=0, high=self._max_distance_goal*4, shape=(1,), dtype=np.float32),)
 
         # given number of points from global path
         global_plan_path = point * self._num_global_plan_points

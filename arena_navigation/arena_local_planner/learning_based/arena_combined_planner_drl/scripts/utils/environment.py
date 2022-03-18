@@ -18,7 +18,7 @@ from .observer import Observer
 from .reward import RewardCalculator
 from .task_manager import TaskManager
 from datetime import datetime as dt
-
+from pympler import muppy, summary, tracker, refbrowser
 
 class FlatlandEnv(gym.Env):
     """ Custom environment that follows gym interface """
@@ -394,13 +394,10 @@ class FlatlandEnv(gym.Env):
 # from .argparser import get_commandline_arguments, get_config_arguments, check_params
 # from .startup_utils import wait_for_nodes, make_envs
 # from pydoc import locate
-# from pympler import muppy, summary, tracker, refbrowser
+
 # from .hyperparameter_utils import write_hyperparameters_json
 # from stable_baselines.common.vec_env import VecNormalize, DummyVecEnv
 # import pickle
-
-# def output_function(o):
-#     return str(type(o))
 
 # def main():
     
@@ -422,11 +419,6 @@ class FlatlandEnv(gym.Env):
 #     args, save_paths = get_config_arguments(args, settings_file)
 
 #     # initiate ros node with according log level
-#     rospy.set_param("/enable_statistics", "true")
-#     rospy.set_param("/statistics_window_max_elements", 100)
-#     rospy.set_param("/statistics_window_min_elements", 10)
-#     rospy.set_param("/statistics_window_min_size", 4)
-#     rospy.set_param("/statistics_window_max_size", 10)
 #     rospy.set_param("/curr_stage", args.task_curr_stage)
 #     args.n_envs = 1
 #     #check_params(args)
@@ -451,22 +443,25 @@ class FlatlandEnv(gym.Env):
 #     env.step([(0,0)])
 #     all_objects_before = muppy.get_objects()
 
-#     print("loop")
-#     for i in range(10):
-#         print("reset loop")
-#         env.reset()
-#         for j in range(100):
-#             _, _, done, info = env.step([(0,0)])
-#             if done:
-#                 print("reset done")
-#                 env.reset()
-#     print("loop end")
+#     for i in range(10000):
+#         env.envs[0]._call_service_takeSimStep(env.envs[0]._action_frequency)
+
+#     # print("loop")
+#     # for i in range(50):
+#     #     print("reset loop")
+#     #     env.reset()
+#     #     for j in range(1000):
+#     #         _, _, done, info = env.step([(0,0)])
+#     #         if done:
+#     #             print("reset done")
+#     #             env.reset()
+#     # print("loop end")
 #     all_objects_after = muppy.get_objects()
 
 #     sum1 = summary.summarize(all_objects_before)
 #     #sum2 = summary.summarize(all_objects_between)
 #     sum3 = summary.summarize(all_objects_after)
-#     ib = refbrowser.ConsoleBrowser(env.envs[0], maxdepth=4)
+#     #ib = refbrowser.ConsoleBrowser(env.envs[0], maxdepth=4)
 #     with open("mem_stats.pkl", "wb") as f:
 #         pickle.dump((sum1, sum3), f)
 #     #diff1 = summary.get_diff(sum1, sum2)
@@ -476,5 +471,5 @@ class FlatlandEnv(gym.Env):
 #     print()
 #     summary.print_(diff2)
     
-#     ib.print_tree()
+#     #ib.print_tree()
  

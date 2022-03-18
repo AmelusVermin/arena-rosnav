@@ -109,10 +109,10 @@ class InitiateNewTrainStage(BaseCallback):
             self.log_curr_stage(EvalObject)
             if (
                 self.threshhold_type == "rew"
-                and EvalObject.best_mean_reward <= self.lower_threshold
+                and EvalObject.best_mean_reward < self.lower_threshold
             ) or (
                 self.threshhold_type == "succ"
-                and EvalObject.last_success_rate <= self.lower_threshold
+                and EvalObject.last_success_rate < self.lower_threshold
             ):
                 for i, pub in enumerate(self._publishers_previous):
                     pub.publish(self._trigger)
