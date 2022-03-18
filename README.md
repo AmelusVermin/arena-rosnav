@@ -1,7 +1,7 @@
 # Docker
 
 ```
-curl -LJO https://raw.githubusercontent.com/AmelusVermin/arena-rosnav/251913c63e21b5c66ec913303752efbc75e024e1/docker/Dockerfile 
+curl -LJO https://raw.githubusercontent.com/AmelusVermin/arena-rosnav/drl_combined_planner_learning/docker/Dockerfile
 docker build -t amelus/ros_training .
 docker run --name train_agent_1 -p 6006:6006 --gpus all amelus/ros_training ./docker/run_training.sh -n 16 -c configs/configs_agent_1/
 ``` 
