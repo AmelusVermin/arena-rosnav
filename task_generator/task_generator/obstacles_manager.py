@@ -601,8 +601,6 @@ class ObstaclesManager:
             random_move['angular_velocity_max'] = angular_velocity_max
             random_move['body'] = 'random'
             dict_file['plugins'].append(random_move)
-        with open(os.path.join("/home/marvin", "test.yaml"), 'w') as fd:
-            yaml.dump(dict_file, fd)
         with open(yaml_path, 'w') as fd:
             yaml.dump(dict_file, fd)
         
