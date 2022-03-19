@@ -56,7 +56,7 @@ class InitiateNewTrainStage(BaseCallback):
         self.lower_threshold = lower_threshold
 
         assert (
-            self.upper_threshold > self.lower_threshold
+            self.upper_threshold >= self.lower_threshold
         ), "upper threshold has to be bigger than lower threshold"
         assert (
             self.upper_threshold >= 0 and self.lower_threshold >= 0
