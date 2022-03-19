@@ -45,15 +45,15 @@ class InitiateNewTrainStage(BaseCallback):
         }, "given theshhold type neither 'rew' or 'succ'"
 
         # default values
-        if self.threshhold_type == "rew" and upper_threshold == 0:
-            self.upper_threshold = 13
-            self.lower_threshold = 7
-        elif self.threshhold_type == "succ" and upper_threshold == 0:
-            self.upper_threshold = 0.85
-            self.lower_threshold = 0.6
-        else:
-            self.upper_threshold = upper_threshold
-            self.lower_threshold = lower_threshold
+        #if self.threshhold_type == "rew" and upper_threshold == 0:
+        #    self.upper_threshold = 13
+        #    self.lower_threshold = 7
+        #elif self.threshhold_type == "succ" and upper_threshold == 0:
+        #    self.upper_threshold = 0.85
+        #    self.lower_threshold = 0.6
+        #else:
+        self.upper_threshold = upper_threshold
+        self.lower_threshold = lower_threshold
 
         assert (
             self.upper_threshold > self.lower_threshold
