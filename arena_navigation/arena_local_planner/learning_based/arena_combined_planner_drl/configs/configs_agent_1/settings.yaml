@@ -91,7 +91,7 @@ evaluation:
   # n_eval_episodes: number of episodes to evaluate agent on
   n_eval_episodes: 30
   # eval_freq: evaluate the agent every eval_freq train timesteps
-  eval_freq: 19200
+  eval_freq: 14400
   deterministic: True
 
 stoptraining:

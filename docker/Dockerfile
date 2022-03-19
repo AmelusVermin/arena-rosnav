@@ -98,7 +98,8 @@ RUN pip3 install --extra-index-url https://rospypi.github.io/simple/ rospy rosba
         tensorflow-gpu==1.15 \
         stable-baselines==2.10.2 \
         imageio==2.9.0 \ 
-        Pillow==7.2.0
+        Pillow==7.2.0 \
+        Pympler
 
 
 # load forks and build project

@@ -46,17 +46,11 @@ class Observer():
         # define subscribers
         # lidar scan
         self._scan_sub = message_filters.Subscriber(f"{self.ns_prefix}scan", LaserScan, queue_size=1)
-        # comment out if using TimeSynchronizer instead
         self._scan_sub.registerCallback(self._scan_callback)
         
         # odometry
         self._odom_sub = message_filters.Subscriber(f"{self.ns_prefix}odom", Odometry, queue_size=1)
-        # comment out if using TimeSynchronizer instead
         self._odom_sub.registerCallback(self._odom_callback)
-        
-        # define synchronizer for getting lidar scan and odometry at the same time
-        # self._ts = message_filters.TimeSynchronizer([self._scan_sub, self._odom_sub], args.max_deque_size)
-        # self._ts.registerCallback(self._sync_callback)
         
         # global goal
         self._goal_sub = message_filters.Subscriber(f"{self.ns_prefix}goal", PoseStamped, queue_size=1)
@@ -82,7 +76,7 @@ class Observer():
         )
 
         # length of the global path
-        global_plan_length = (spaces.Box(low=0, high=self._max_distance_goal**2, shape=(1,), dtype=np.float32),)
+        global_plan_length = (spaces.Box(low=0, high=self._max_distance_goal*4, shape=(1,), dtype=np.float32),)
 
         # given number of points from global path
         global_plan_path = point * self._num_global_plan_points
