@@ -22,12 +22,12 @@ environment:
   collision_tolerance: 0 
   # task mode of task generator: "random" or "staged" 
   task_mode: "staged"
-  task_curr_stage: 5
+  task_curr_stage: 1
   safe_dist: null
   extended_eval: True
   train_max_steps_per_episode: 1000
   # unused, only set for compatability issues with hyperparameter.json
-  eval_max_steps_per_episode: 500 # 2000
+  eval_max_steps_per_episode: 100 # 2000
   use_first_synced_obs: True
   max_deque_size: 10
   sync_slop: 0.05
