@@ -216,13 +216,16 @@ class StagedRandomTask(RandomTask):
         self._initiate_stage()
 
     def next_stage(self, msg: Bool):
-        print(f"{self.ns}:change to next stage")
+        print(f"{self.ns}:change to next stage {self._curr_stage + 1}")
         if self._curr_stage < len(self._stages):
             self._curr_stage = self._curr_stage + 1
             self._initiate_stage()
+            
+            param_curr_stage = rospy.get_param("/curr_stage")
 
-            if self.ns == "eval_sim":
+            if param_curr_stage != self._curr_stage:
                 rospy.set_param("/curr_stage", self._curr_stage)
+                print(f"set param curr_stage to {self._curr_stage}")
                 with self._lock_json:
                     self._update_curr_stage_json()
 

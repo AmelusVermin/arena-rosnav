@@ -31,6 +31,7 @@ class TaskManager:
         else:
             self.task = self._get_random_task(paths, start_stage)
             self._request_new_map = rospy.ServiceProxy("/" + self.ns + "/new_map", GetMapWithSeed)
+            #self._request_new_map.queue_size = 1
 
     def reset(self, seed, new_map=True):
         done = False

@@ -37,8 +37,7 @@ class ROSGlobalPlanner(GlobalPlanner):
 
     def get_global_plan(self, goal, odom):
         """ Calls the global planner service with the given goal and returns response. Ignores odom """
-        prefix = "" if self.ns == "" else f"/{self.ns}"
-        make_new_plan = rospy.ServiceProxy(f'{prefix}/{ROSGlobalPlanner.get_name()}/makeGlobalPlanFull', MakeGlobalPlanFull)
+        
         try:
             # prepare header, as service response doesn't have one
             header = std_msgs.msg.Header()
@@ -48,7 +47,7 @@ class ROSGlobalPlanner(GlobalPlanner):
             start = PoseStamped()
             start.header = header
             start.pose = odom.pose.pose
-            response = make_new_plan(start, goal)
+            response = self._make_new_plan(start, goal)
             # prepare output
             global_plan: nav_msgs.msg.Path = response.global_plan
             success: bool = response.success
@@ -84,6 +83,9 @@ class ROSGlobalPlanner(GlobalPlanner):
             rospy.logdebug(f"waiting for global planner service in namespace: '{self.ns}'")
             rospy.wait_for_service(f'{prefix}/{ROSGlobalPlanner.get_name()}/makeGlobalPlan', 0.25)
             rospy.logdebug(f"global planner service available for namespace: '{self.ns}'")
+            prefix = "" if self.ns == "" else f"/{self.ns}"
+            self._make_new_plan = rospy.ServiceProxy(f'{prefix}/{ROSGlobalPlanner.get_name()}/makeGlobalPlanFull', MakeGlobalPlanFull)
+            #self._make_new_plan.queue_size = 1
             return True
         except rospy.ROSException as e:
             return False

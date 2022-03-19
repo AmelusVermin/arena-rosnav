@@ -18,7 +18,7 @@ from .observer import Observer
 from .reward import RewardCalculator
 from .task_manager import TaskManager
 from datetime import datetime as dt
-#from pympler import muppy, summary, tracker, refbrowser
+from pympler import muppy, summary, tracker, refbrowser
 
 class FlatlandEnv(gym.Env):
     """ Custom environment that follows gym interface """
@@ -146,6 +146,7 @@ class FlatlandEnv(gym.Env):
             self._sim_step_client = rospy.ServiceProxy(
                 self._service_name_step, StepWorld
             )
+            self._sim_step_client.queue_size=1
 
         # let the environment run a bit to initiate some services in global and mid planner()
         if self._is_sim_in_train_mode:
@@ -443,19 +444,19 @@ class FlatlandEnv(gym.Env):
 #     env.step([(0,0)])
 #     all_objects_before = muppy.get_objects()
 
-#     for i in range(10000):
-#         env.envs[0]._call_service_takeSimStep(env.envs[0]._action_frequency)
+#     #for i in range(20000):
+#     #    env.envs[0]._call_service_takeSimStep(env.envs[0]._action_frequency)
 
-#     # print("loop")
-#     # for i in range(50):
-#     #     print("reset loop")
-#     #     env.reset()
-#     #     for j in range(1000):
-#     #         _, _, done, info = env.step([(0,0)])
-#     #         if done:
-#     #             print("reset done")
-#     #             env.reset()
-#     # print("loop end")
+#     print("loop")
+#     for i in range(20):
+#         print("reset loop")
+#         env.reset()
+#         for j in range(1000):
+#             _, _, done, info = env.step([(0,0)])
+#             if done:
+#                 print("reset done")
+#                 env.reset()
+#     print("loop end")
 #     all_objects_after = muppy.get_objects()
 
 #     sum1 = summary.summarize(all_objects_before)

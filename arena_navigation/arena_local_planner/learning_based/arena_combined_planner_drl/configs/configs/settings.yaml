@@ -42,7 +42,7 @@ training:
   train_log_dir: "logs/training_logs"
   tensorboard_log_dir: "logs/tensorboard"
   ## learning related settings
-  batch_size: 256 # 19200
+  batch_size: 512 # 19200
   gamma: 0.99 
   ent_coef: 0.005 
   learning_rate: 0.0003
@@ -81,7 +81,7 @@ trainstage:
   ## settings related to creating TrainStage callback
   # type can be either 'succ' or 'rew'
   stage_threshold_type: "succ"
-  stage_upper_thres: 0.80
+  stage_upper_thres: 0.00
   stage_lower_thres: 0.0
   stage_verbose: 1
 
@@ -91,7 +91,7 @@ evaluation:
   # n_eval_episodes: number of episodes to evaluate agent on
   n_eval_episodes: 2 # 20
   # eval_freq: evaluate the agent every eval_freq train timesteps
-  eval_freq: 512 #14400
+  eval_freq: 32 #14400
   deterministic: True
 
 stoptraining:
