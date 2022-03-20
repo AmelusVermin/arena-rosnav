@@ -64,7 +64,7 @@ model:
   # model_path and update_params need to be set if true
   load_model: true
   # string: path to zip file containing a model
-  model_path: "/catkin_ws/src/arena-rosnav/arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/models/trained/agent_1_2022_03_19__12_40/newest_model/newest_model.zip"
+  model_path: "models/saved/agent_1_2022_03_19__12_40/newest_model/newest_model.zip"
   # boolean: true if the saved model params shall be overwritten by the current config values or not
   # paths are definitly overwritten as they might not exist anymore
   overwrite_params: false
