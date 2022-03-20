@@ -254,7 +254,8 @@ class Observer():
             observation = np.hstack([scan_obs, goal_obs, gp_points_obs])
         else:
             raise ValueError(f"observation_space: {self.observation_space} not known!")
-        
+        assert not np.isnan(observation).any(), f"observation contains nan: {observation}"
+        assert not np.isinf(observation).any(), f"observation contains inf: {observation}"
         return observation
     
     def get_processed_observation(self, obs_dict):
@@ -278,6 +279,7 @@ class Observer():
         """ remove_nans_from_scan """
         scan = np.array(msg_LaserScan.ranges)
         scan[np.isnan(scan)] = msg_LaserScan.range_max
+        scan[np.isinf(scan)] = msg_LaserScan.range_max
         msg_LaserScan.ranges = scan
         return msg_LaserScan
 

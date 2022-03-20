@@ -18,7 +18,7 @@ from .observer import Observer
 from .reward import RewardCalculator
 from .task_manager import TaskManager
 from datetime import datetime as dt
-from pympler import muppy, summary, tracker, refbrowser
+#from pympler import muppy, summary, tracker, refbrowser
 
 class FlatlandEnv(gym.Env):
     """ Custom environment that follows gym interface """
@@ -146,7 +146,7 @@ class FlatlandEnv(gym.Env):
             self._sim_step_client = rospy.ServiceProxy(
                 self._service_name_step, StepWorld
             )
-            self._sim_step_client.queue_size=1
+            #self._sim_step_client.queue_size=1
 
         # let the environment run a bit to initiate some services in global and mid planner()
         if self._is_sim_in_train_mode:
@@ -273,6 +273,7 @@ class FlatlandEnv(gym.Env):
         self._steps_curr_episode += 1
         rospy.logdebug(
             f"ns:{self.ns}, end of step, reward: {reward}, done: {done}, info: {info}")
+        
         return observation, reward, done, info
 
     def reset(self):

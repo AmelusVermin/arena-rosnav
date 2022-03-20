@@ -13,6 +13,8 @@ def get_pose_difference(goal_pos: Pose2D, robot_pos: Pose2D):
         theta = (np.arctan2(y_relative, x_relative) - robot_pos.theta + 4 * np.pi) % (
             2 * np.pi
         ) - np.pi
+        assert not np.isnan([rho, theta]).any(), "rho or theta is nan: {[rho, theta]}"
+        assert not np.isinf([rho, theta]).any(), "rho or theta is inf: {[rho, theta]}" 
         return rho, theta
 
 def pose3D_to_pose2D(pose3d):

@@ -98,6 +98,7 @@ class RewardCalculator:
         """
         self._reset()
         self.cal_func(self, laser_scan, goal_in_robot_frame, *args, **kwargs)
+        assert not np.isnan(self.curr_reward) and not np.isinf(self.curr_reward), "reward is nan or inf: {reward}"
         return self.curr_reward, self.info, self._reward_composition
 
     def _cal_reward_rule_00(
