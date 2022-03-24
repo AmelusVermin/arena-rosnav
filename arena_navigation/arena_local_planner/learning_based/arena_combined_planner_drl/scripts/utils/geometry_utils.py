@@ -6,15 +6,15 @@ from scipy.interpolate import splprep, BSpline, splev, splrep
 from scipy.integrate import trapz
 import matplotlib.pyplot as plt
 
-def get_pose_difference(goal_pos: Pose2D, robot_pos: Pose2D):
-        y_relative = goal_pos.y - robot_pos.y
-        x_relative = goal_pos.x - robot_pos.x
+def get_pose_difference(pose1: Pose2D, pose2: Pose2D):
+        y_relative = pose1.y - pose2.y
+        x_relative = pose1.x - pose2.x
         rho = (x_relative ** 2 + y_relative ** 2) ** 0.5
-        theta = (np.arctan2(y_relative, x_relative) - robot_pos.theta + 4 * np.pi) % (
+        theta = (np.arctan2(y_relative, x_relative) - pose2.theta + 4 * np.pi) % (
             2 * np.pi
         ) - np.pi
-        assert not np.isnan([rho, theta]).any(), "rho or theta is nan: {[rho, theta]}"
-        assert not np.isinf([rho, theta]).any(), "rho or theta is inf: {[rho, theta]}" 
+        assert not np.isnan([rho, theta]).any(), "rho or theta is nan: {rho}, {theta}, {pose1}, {pose2}"
+        assert not np.isinf([rho, theta]).any(), "rho or theta is inf: {rho}, {theta}, {pose1}, {pose2}" 
         return rho, theta
 
 def pose3D_to_pose2D(pose3d):
