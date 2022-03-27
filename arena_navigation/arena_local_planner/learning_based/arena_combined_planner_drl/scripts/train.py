@@ -10,7 +10,7 @@ import sys
 import subprocess
 import signal
 from pydoc import locate
-from stable_baselines.common.vec_env import SubprocVecEnv, DummyVecEnv
+from stable_baselines.common.vec_env import SubprocVecEnv, DummyVecEnv, VecNormalize
 from stable_baselines.ppo2 import PPO2
 
 from distutils.dir_util import copy_tree
@@ -182,6 +182,9 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("KeyboardInterrupt..")
 
+    if isinstance(env, VecNormalize):
+        env.save(os.path.join(save_paths['model'], "vec_normalize.pkl"))
+    model.save(os.path.join(save_paths['model'], "model"))          
     model.env.close()
     tensorboard_process.terminate()
     print(f"Time passed: {time.time()-start}s")
