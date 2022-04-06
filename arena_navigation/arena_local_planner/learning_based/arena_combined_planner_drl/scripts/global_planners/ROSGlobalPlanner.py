@@ -84,7 +84,7 @@ class ROSGlobalPlanner(GlobalPlanner):
             rospy.wait_for_service(f'{prefix}/{ROSGlobalPlanner.get_name()}/makeGlobalPlan', 0.25)
             rospy.logdebug(f"global planner service available for namespace: '{self.ns}'")
             prefix = "" if self.ns == "" else f"/{self.ns}"
-            self._make_new_plan = rospy.ServiceProxy(f'{prefix}/{ROSGlobalPlanner.get_name()}/makeGlobalPlanFull', MakeGlobalPlanFull)
+            self._make_new_plan = rospy.ServiceProxy(f'{prefix}/{ROSGlobalPlanner.get_name()}/makeGlobalPlanFull', MakeGlobalPlanFull, persistent=True)
             #self._make_new_plan.queue_size = 1
             return True
         except rospy.ROSException as e:

@@ -13,7 +13,7 @@ NAME = "dummy global planner"
 
 class Dummy(GlobalPlanner):
 
-    def __init__(self, ns):
+    def __init__(self, ns, config_folder):
         super().__init__(ns)
 
     @staticmethod
@@ -39,7 +39,7 @@ class Dummy(GlobalPlanner):
         global_path.poses.append(stamped_start)
         global_path.poses.append(goal)
         global_path.header = header
-        return global_path
+        return global_path, True
 
     def close(self):
         """ Cleans the class when closing the program. No cleaning to do when closing this planner"""

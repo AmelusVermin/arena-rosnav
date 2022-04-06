@@ -7,6 +7,7 @@ import rospkg
 import rospy
 import rosservice
 import yaml
+import traceback
 from nav_msgs.srv import GetMap
 from rospy import ServiceException
 from task_generator.task_generator.obstacles_manager import ObstaclesManager
@@ -30,11 +31,12 @@ class TaskManager:
             self.task = get_predefined_task(ns, mode='scenario', start_stage=1, min_dist=min_dist, PATHS=paths, global_planner=global_planner)
         else:
             self.task = self._get_random_task(paths, start_stage)
-            self._request_new_map = rospy.ServiceProxy("/" + self.ns + "/new_map", GetMapWithSeed)
+            self._request_new_map = rospy.ServiceProxy("/" + self.ns + "/new_map", GetMapWithSeed, persistent=True)
             #self._request_new_map.queue_size = 1
 
     def reset(self, seed, new_map=True):
         done = False
+        attempts = 10
         while(not done):
             if not self.run_scenario:
                 if new_map:
@@ -45,7 +47,10 @@ class TaskManager:
                 done = True
             except Exception:
                 rospy.logwarn(f"{self.ns}: reset error, try again!")
-                done = False
+                if attempts <= 0:
+                    print(traceback.format_exc())
+                    exit()
+            attempts -= 1
 
 
     def _get_random_task(self, paths: dict, start_stage):
@@ -142,6 +147,7 @@ class TaskManager:
         curr_stage = rospy.get_param("/curr_stage")
         while not isinstance(curr_stage, int) or curr_stage==0:
             curr_stage = rospy.get_param("/curr_stage")
+            print(curr_stage)
         rospy.loginfo(f"{self.ns}: update map in stage {curr_stage}!")
 
         if self.last_stage != curr_stage or self.last_stage == 0:
@@ -156,4 +162,5 @@ class TaskManager:
             self.robot_manager.update_map(new_map.map)
             self.new_map = True
         except ServiceException:
-            self.new_map = False
+            print(traceback.format_exc())
+            exit()

@@ -258,7 +258,7 @@ class Observer():
         assert not np.isinf(observation).any(), f"observation contains inf: {observation}"
         return observation
     
-    def get_processed_observation(self, obs_dict):
+    def get_processed_observation(self, obs_dict, global_plan_array):
         """ prepares observation as model input, obs_dict must innclude global plan and subgoal """
         scan = obs_dict['laser_scan']
         robot_pose_2D = obs_dict['robot_pose']
@@ -267,7 +267,7 @@ class Observer():
         subgoal = obs_dict["subgoal"]
 
         # convert global plan Path message to nparray and get length
-        global_plan_array = Observer.process_global_plan_msg(global_plan)
+        # global_plan_array = Observer.process_global_plan_msg(global_plan)
         global_plan_length = get_path_length(global_plan_array)
         
         # prepare agent observation

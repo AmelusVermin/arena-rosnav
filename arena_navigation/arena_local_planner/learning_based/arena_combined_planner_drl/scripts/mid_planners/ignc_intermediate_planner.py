@@ -57,7 +57,7 @@ class IntermediatePlanner(MidPlanner):
             rospy.wait_for_service(f'{prefix}/{IntermediatePlanner.get_name()}/makeSubgoal', 0.25)
             rospy.logdebug(f"got intermediate planner service for namespace: '{self.ns}'")
             prefix = "" if self.ns == "" else f"/{self.ns}"
-            self._make_subgoal = rospy.ServiceProxy(f'{prefix}/{IntermediatePlanner.get_name()}/makeSubgoal', MakeIntermediateGoal)
+            self._make_subgoal = rospy.ServiceProxy(f'{prefix}/{IntermediatePlanner.get_name()}/makeSubgoal', MakeIntermediateGoal, persistent=True)
             #self._make_subgoal.queue_size = 1
             return True
         except rospy.ROSException as e:

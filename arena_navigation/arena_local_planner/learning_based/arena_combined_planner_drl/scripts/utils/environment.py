@@ -18,7 +18,7 @@ from .observer import Observer
 from .reward import RewardCalculator
 from .task_manager import TaskManager
 from datetime import datetime as dt
-#from pympler import muppy, summary, tracker, refbrowser
+
 
 class FlatlandEnv(gym.Env):
     """ Custom environment that follows gym interface """
@@ -144,7 +144,7 @@ class FlatlandEnv(gym.Env):
         if self._is_sim_in_train_mode:
             self._service_name_step = f"{self.ns_prefix}step_world"
             self._sim_step_client = rospy.ServiceProxy(
-                self._service_name_step, StepWorld
+                self._service_name_step, StepWorld, persistent=True
             )
             #self._sim_step_client.queue_size=1
 
@@ -224,7 +224,7 @@ class FlatlandEnv(gym.Env):
         
         obs_dict["global_plan"] = self._last_global_plan
         obs_dict["subgoal"] = self._last_subgoal
-        observation = self._observer.get_processed_observation(obs_dict)
+        observation = self._observer.get_processed_observation(obs_dict, global_plan_array)
         
         #subgoal_2D = pose3D_to_pose2D(self._last_subgoal.pose)
         goal_tup = get_pose_difference(
@@ -358,7 +358,7 @@ class FlatlandEnv(gym.Env):
         
         obs_dict["global_plan"] = self._last_global_plan
         obs_dict["subgoal"] = self._last_subgoal
-        observation = self._observer.get_processed_observation(obs_dict)
+        observation = self._observer.get_processed_observation(obs_dict, global_plan_array)
 
         rospy.loginfo(
             f"{dt.now().strftime('%d.%m %H:%M')}::{self.ns}: reset environment finished!")
@@ -393,85 +393,5 @@ class FlatlandEnv(gym.Env):
         except rospy.ServiceException as e:
             rospy.logdebug("step Service call failed: %s" % e)
 
-# from .argparser import get_commandline_arguments, get_config_arguments, check_params
-# from .startup_utils import wait_for_nodes, make_envs
-# from pydoc import locate
 
-# from .hyperparameter_utils import write_hyperparameters_json
-# from stable_baselines.common.vec_env import VecNormalize, DummyVecEnv
-# import pickle
-
-# def main():
-    
-
-#     args = get_commandline_arguments()
-#     # (environment_settings.yaml from this package and myrobot.model.yaml from simulator_setup)
-#     if args.configs_folder is "default":
-#         args.configs_folder = os.path.join(
-#             rospkg.RosPack().get_path("arena_combined_planner_drl"), 
-#             "configs",
-#             "configs"
-#         )
-
-#     settings_file = os.path.join(
-#             args.configs_folder, 
-#             "settings.yaml"
-#         )
-    
-#     args, save_paths = get_config_arguments(args, settings_file)
-
-#     # initiate ros node with according log level
-#     rospy.set_param("/curr_stage", args.task_curr_stage)
-#     args.n_envs = 1
-#     #check_params(args)
-#     args.n_steps = int(args.batch_size / args.n_envs)
-
-#     # wait for nodes to start
-#     wait_for_nodes(with_ns=True, n_envs=args.n_envs, timeout=5)
-
-#     # get classes of global and mid planner
-#     global_planner = locate(args.global_planner_class)
-#     mid_planner = locate(args.mid_planner_class)
-#     write_hyperparameters_json(args, save_paths)
-
-#     print("start init")
-#     env = DummyVecEnv([make_envs(args, True, 0, global_planner, mid_planner, save_paths, train=True)])
-
-#     env = VecNormalize(
-#                 env, training=True, norm_obs=True, norm_reward=False, clip_reward=15
-#             )
-
-#     env.reset()
-#     env.step([(0,0)])
-#     all_objects_before = muppy.get_objects()
-
-#     #for i in range(20000):
-#     #    env.envs[0]._call_service_takeSimStep(env.envs[0]._action_frequency)
-
-#     print("loop")
-#     for i in range(20):
-#         print("reset loop")
-#         env.reset()
-#         for j in range(1000):
-#             _, _, done, info = env.step([(0,0)])
-#             if done:
-#                 print("reset done")
-#                 env.reset()
-#     print("loop end")
-#     all_objects_after = muppy.get_objects()
-
-#     sum1 = summary.summarize(all_objects_before)
-#     #sum2 = summary.summarize(all_objects_between)
-#     sum3 = summary.summarize(all_objects_after)
-#     #ib = refbrowser.ConsoleBrowser(env.envs[0], maxdepth=4)
-#     with open("mem_stats.pkl", "wb") as f:
-#         pickle.dump((sum1, sum3), f)
-#     #diff1 = summary.get_diff(sum1, sum2)
-#     diff2 = summary.get_diff(sum1, sum3)
-
-#     #summary.print_(diff1)
-#     print()
-#     summary.print_(diff2)
-    
-#     #ib.print_tree()
  

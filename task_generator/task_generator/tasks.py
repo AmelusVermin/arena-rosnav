@@ -8,6 +8,7 @@ import rospkg
 import json
 import yaml
 import numpy as np
+import traceback
 from nav_msgs.msg import OccupancyGrid
 from nav_msgs.srv import GetMap
 from geometry_msgs.msg import Pose2D
@@ -108,6 +109,7 @@ class RandomTask(ABSTask):
                     # reset map to original one to clean the objects of last iteration
                     self.obstacles_manager.publish_original_map()
                     rospy.logwarn(repr(e))
+                    print(traceback.format_exc())
                     fail_times += 1
             if fail_times == max_fail_times:
                 raise Exception("reset error!")
