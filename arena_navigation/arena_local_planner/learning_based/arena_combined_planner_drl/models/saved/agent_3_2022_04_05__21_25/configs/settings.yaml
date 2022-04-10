@@ -22,7 +22,7 @@ environment:
   collision_tolerance: 0 
   # task mode of task generator: "random" or "staged" 
   task_mode: "staged"
-  task_curr_stage: 1
+  task_curr_stage: 5
   safe_dist: null
   extended_eval: True
   train_max_steps_per_episode: 1000
