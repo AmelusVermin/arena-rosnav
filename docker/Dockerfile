@@ -82,6 +82,9 @@ RUN pip3 install --upgrade pip
 RUN pip3 install --extra-index-url https://rospypi.github.io/simple/ rospy rosbag tf tf2_ros --ignore-installed \ 
 &&  pip3 install pyyaml \
         rospkg \
+        scikit-learn \
+        seaborn \
+        pandas \
         catkin_pkg \ 
         netifaces \ 
         pathlib \
@@ -99,7 +102,8 @@ RUN pip3 install --extra-index-url https://rospypi.github.io/simple/ rospy rosba
         stable-baselines==2.10.2 \
         imageio==2.9.0 \ 
         Pillow==7.2.0 \
-        Pympler
+        Pympler 
+        
 
 
 # load forks and build project
