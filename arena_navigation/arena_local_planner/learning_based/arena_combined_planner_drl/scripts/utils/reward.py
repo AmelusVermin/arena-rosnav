@@ -221,7 +221,8 @@ class RewardCalculator:
         self._reward_safe_dist(laser_scan, punishment_factor=1.25)
         self._reward_collision(laser_scan, punishment_factor=50)
         #self._reward_reduced_path_length(kwargs["global_plan_length"], reward_factor=0.015)
-        self._reward_following_global_plan(kwargs["global_plan"], kwargs["robot_pose"], dist_to_path=0.5, reward_factor=0.3)
+        self._reward_following_global_plan(kwargs["global_plan"], kwargs["robot_pose"], action=kwargs["action"], dist_to_path=0.5, reward_factor=0.3)
+        self._reward_distance_global_plan(kwargs["global_plan"], kwargs["robot_pose"], reward_factor=0.1, penalty_factor=0.1)
         self._reward_time_consumption(kwargs["episode_steps_passed"], max_punishment=30)
         rospy.logdebug(self._reward_composition)
         self.curr_reward = sum(self._reward_composition.values())
@@ -387,6 +388,7 @@ class RewardCalculator:
         """
         reward = 0
         if global_plan is not None and len(global_plan) != 0:
+            #print("calc plan dist reward")
             curr_dist_to_path, idx = self.get_min_dist2global_kdtree(
                 global_plan, robot_pose
             )
@@ -399,6 +401,7 @@ class RewardCalculator:
 
                 reward = w * (self.last_dist_to_path - curr_dist_to_path)
             self.last_dist_to_path = curr_dist_to_path
+        #print(f"distance reward:{reward}")
         self._reward_composition["distance global plan"] = reward
         return reward
 
@@ -419,7 +422,9 @@ class RewardCalculator:
         :param dist_to_path (float, optional): applies reward within this distance
         """
         reward = 0
+        
         if global_plan is not None and len(global_plan) != 0 and action is not None:
+            #print("calc plan follow reward")
             curr_dist_to_path, idx = self.get_min_dist2global_kdtree(
                 global_plan, robot_pose
             )
@@ -427,6 +432,7 @@ class RewardCalculator:
             if curr_dist_to_path <= dist_to_path:
                 reward = reward_factor * action[0]
         self._reward_composition["following global plan"] = reward
+        #print(f"folowwing reward: {reward}")
         return reward
 
     def get_min_dist2global_kdtree(self, global_plan: np.array, robot_pose: Pose2D):
@@ -436,7 +442,7 @@ class RewardCalculator:
         :param global_plan: (np.ndarray): vector containing poses on global plan
         :param robot_pose (Pose2D): robot position
         """
-        if self.kdtree is None or self.last_global_plan != global_plan:
+        if self.kdtree is None or self.last_global_plan is None or not np.array_equal(global_plan, self.last_global_plan):
             self.kdtree = scipy.spatial.cKDTree(global_plan)
 
         dist, index = self.kdtree.query([robot_pose.x, robot_pose.y])

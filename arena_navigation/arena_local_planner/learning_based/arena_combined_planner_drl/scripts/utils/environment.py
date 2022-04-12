@@ -207,13 +207,13 @@ class FlatlandEnv(gym.Env):
                 recalc_global_plan = True       
             else:
                 dist_to_plan, _ = self._kdtree.query([robot_pose_2D.x, robot_pose_2D.y])
-                print(f"{self.ns}:distance to global plan: {dist_to_plan}")
+                rospy.logdebug(f"{self.ns}:distance to global plan: {dist_to_plan}")
                 if dist_to_plan > self._global_plan_dist_threshold:
                     recalc_global_plan = True
 
         condition_interval = self._gp_interval >= 1 and (self._steps_curr_episode % self._gp_interval) == 0
         if condition_interval or recalc_global_plan:
-            print(f"replan global plan at step {self._steps_curr_episode}")
+            rospy.logdebug(f"replan global plan at step {self._steps_curr_episode}")
             global_plan, success = self._global_planner.get_global_plan(
                 global_goal, odom)
             assert global_plan is not None, "global plan is None!"
