@@ -72,8 +72,8 @@
   outdoor_obstacle_extra_radius: 10
 
 5:
-  static: 13
-  dynamic: 18
+  static: 10
+  dynamic: 14
   map_type: "outdoor"
   map_height: 200
   map_width: 200
@@ -89,8 +89,8 @@
   outdoor_obstacle_extra_radius: 10
 
 6:
-  static: 9
-  dynamic: 18
+  static: 6
+  dynamic: 12
   map_type: "indoor"
   map_height: 200
   map_width: 200
@@ -106,8 +106,8 @@
   outdoor_obstacle_extra_radius: 10
 
 7:
-  static: 15
-  dynamic: 26
+  static: 12
+  dynamic: 19
   map_type: "outdoor"
   map_height: 200
   map_width: 200

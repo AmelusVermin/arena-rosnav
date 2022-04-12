@@ -1,0 +1,6 @@
+<launch>
+  <node name="combined_planner_drl" pkg="arena_combined_planner_drl" type="run.py">
+    <remap from="/move_base_simple/goal" to="/goal"/>
+    <remap from="/move_base/GlobalPlanner/plan" to="/globalPlan"/>
+  </node>
+</launch>

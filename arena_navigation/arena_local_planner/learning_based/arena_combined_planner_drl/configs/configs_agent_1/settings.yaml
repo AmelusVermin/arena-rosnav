@@ -32,9 +32,10 @@ environment:
   max_deque_size: 10
   sync_slop: 0.05
   # interval in steps when the planners are called. 
-  # 1 = every step, 2 = every 2 steps the planner is called and the global_plan/subgoal gets updated
-  global_planner_call_interval: 1
+  # 1 = every step, 2 = every 2 steps the planner is called and the global_plan/subgoal gets updated, -1 for global plan means: update if to far away from plan
+  global_planner_call_interval: -1
   mid_planner_call_interval: 1
+  global_plan_dist_threshold: 3
 
 training:
   ## settings related to training and model

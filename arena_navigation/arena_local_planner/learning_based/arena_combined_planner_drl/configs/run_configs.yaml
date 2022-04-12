@@ -1,0 +1,6 @@
+num_global_plan_points: 50
+gp_point_skip_rate: 4
+max_distance_goal: 400
+max_deque_size: 10
+sync_slop: 0.05
+use_first_synced_obs: True

@@ -166,6 +166,7 @@ void PlanManager::execFSMCallback(const ros::TimerEvent &e)
       std::thread t(&PlanningVisualization::drawGlobalPath,visualization_ ,planner_collector_->global_path_, 0.03, Eigen::Vector4d(0.5, 0.5, 0.5, 0.6),0);
       // visualization_->drawGlobalPath(planner_collector_->global_path_, 0.03, Eigen::Vector4d(0.5, 0.5, 0.5, 0.6));
       t.detach();
+      global_plan_pub_.publish(planner_collector_->global_path_);
       changeFSMExecState(REPLAN_MID, "FSM");
     }
     else

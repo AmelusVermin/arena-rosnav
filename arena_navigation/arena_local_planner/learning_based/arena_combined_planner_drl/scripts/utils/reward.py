@@ -35,6 +35,7 @@ class RewardCalculator:
         self.last_subgoal_dist = None
         self.last_dist_to_path = None
         self.last_action = None
+        self.last_global_plan = None
         self.safe_dist = safe_dist
         self.collision_tolerance = collision_tolerance
         self._extended_eval = extended_eval
@@ -61,6 +62,7 @@ class RewardCalculator:
         self.last_dist_to_path = None
         self.last_action = None
         self.kdtree = None
+        self.last_global_plan = None
         self._prior_path_lengths.clear()
 
     def _reset(self):
@@ -99,6 +101,7 @@ class RewardCalculator:
         self._reset()
         self.cal_func(self, laser_scan, goal_in_robot_frame, *args, **kwargs)
         assert not np.isnan(self.curr_reward) and not np.isinf(self.curr_reward), "reward is nan or inf: {reward}"
+        self.last_global_plan = kwargs["global_plan"]
         return self.curr_reward, self.info, self._reward_composition
 
     def _cal_reward_rule_00(
@@ -211,16 +214,18 @@ class RewardCalculator:
         *args,
         **kwargs
     ):
-        self._reward_distance_traveled(kwargs["action"], consumption_factor=0.025)
+        #self._reward_distance_traveled(kwargs["action"], consumption_factor=0.025)
         self._reward_abrupt_direction_change(kwargs["action"], punishment_weight=1000)
         self._reward_goal_reached(goal_in_robot_frame, reward_factor=45)
         self._reward_goal_approached(goal_in_robot_frame, reward_factor=0.8, penalty_factor=0.6)
         self._reward_safe_dist(laser_scan, punishment_factor=1.25)
         self._reward_collision(laser_scan, punishment_factor=50)
-        self._reward_reduced_path_length(kwargs["global_plan_length"], reward_factor=0.015)
+        #self._reward_reduced_path_length(kwargs["global_plan_length"], reward_factor=0.015)
+        self._reward_following_global_plan(kwargs["global_plan"], kwargs["robot_pose"], dist_to_path=0.5, reward_factor=0.3)
         self._reward_time_consumption(kwargs["episode_steps_passed"], max_punishment=30)
         rospy.logdebug(self._reward_composition)
         self.curr_reward = sum(self._reward_composition.values())
+
     
     def _reward_time_consumption(self, steps_passed, max_punishment=30):
         """ punishes the agent if it takes more and more timesteps to reach the goal based on """
@@ -431,7 +436,7 @@ class RewardCalculator:
         :param global_plan: (np.ndarray): vector containing poses on global plan
         :param robot_pose (Pose2D): robot position
         """
-        if self.kdtree is None:
+        if self.kdtree is None or self.last_global_plan != global_plan:
             self.kdtree = scipy.spatial.cKDTree(global_plan)
 
         dist, index = self.kdtree.query([robot_pose.x, robot_pose.y])

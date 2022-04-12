@@ -33,8 +33,9 @@ environment:
   sync_slop: 0.05
   # interval in steps when the planners are called. 
   # 1 = every step, 2 = every 2 steps the planner is called and the global_plan/subgoal gets updated
-  global_planner_call_interval: 1
-  mid_planner_call_interval: 1
+  global_planner_call_interval: -1
+  mid_planner_call_interval: 5
+  global_plan_dist_threshold: 1
 
 training:
   ## settings related to training and model
@@ -50,7 +51,7 @@ training:
   max_grad_norm: 0.5
   gae_lambda: 0.95
   # number of envrionments run in parallel should be a multiple of mini_batch_size for recurrent policies
-  mini_batch_size: 8
+  mini_batch_size: 4
   n_epochs: 3
   clip_range: 0.22
   normalize: True
@@ -81,7 +82,7 @@ trainstage:
   ## settings related to creating TrainStage callback
   # type can be either 'succ' or 'rew'
   stage_threshold_type: "succ"
-  stage_upper_thres: 0.00
+  stage_upper_thres: 0.8
   stage_lower_thres: 0.0
   stage_verbose: 1
 
@@ -91,7 +92,7 @@ evaluation:
   # n_eval_episodes: number of episodes to evaluate agent on
   n_eval_episodes: 2 # 20
   # eval_freq: evaluate the agent every eval_freq train timesteps
-  eval_freq: 32 #14400
+  eval_freq: 1024 #14400
   deterministic: True
 
 stoptraining:

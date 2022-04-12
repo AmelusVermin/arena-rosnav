@@ -10,7 +10,7 @@ void PlanCollector::initPlanModules(ros::NodeHandle &nh){
 
     goal_=geometry_msgs::PoseStamped();
     
-    std::string global_plan_service_name = "/move_base/NavfnROS/make_plan";
+    std::string global_plan_service_name = "/move_base/GlobalPlanner/make_plan";
     std::string ns = ros::this_node::getNamespace();
     std::string fullName = ns + "/"+global_plan_service_name;
     ros::service::waitForService(fullName);   
@@ -27,17 +27,14 @@ void PlanCollector::initSubgoalModule(ros::NodeHandle &nh){
 
 bool PlanCollector::generate_global_plan(RobotState &start_state,RobotState &end_state){
     //nav_msgs::GetPlan srv;
-    std::cout<<"COME to plan global0"<<std::endl;
     arena_plan_msgs::MakeGlobalPlan srv;    
     srv.request.start=start_state.to_PoseStampted();
     srv.request.goal=end_state.to_PoseStampted();
 
     if (global_plan_client_.call(srv))  
-    {   std::cout<<"COME to plan global2"<<std::endl;
+    {   
         // set global_plan
         global_path_=srv.response.plan;
-        std::cout<<"COME to plan global3"<<std::endl;
-        
         return true;
     }
     else{

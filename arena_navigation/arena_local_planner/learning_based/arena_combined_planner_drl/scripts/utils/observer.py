@@ -15,7 +15,7 @@ from .geometry_utils import pose3D_to_pose2D, get_pose_difference, get_path_leng
 
 class Observer():
 
-    def __init__(self, ns, args):
+    def __init__(self, ns, args, train_mode=True):
         # prepare namespace
         self.ns = ns
         self.ns_prefix = "" if (ns == "" or ns is None) else f"/{ns}/"
@@ -27,15 +27,15 @@ class Observer():
         self._num_lidar_beams = args.num_lidar_beams
         self._lidar_range = args.lidar_range
         self._max_distance_goal = args.max_distance_goal
-        self.observation_space = self._prepare_observation_space(args)
+        self.observation_space = self._prepare_observation_space()
         
         # define observation variables
         
-        self._last_scan = None#LaserScan()
+        self._last_scan = None #LaserScan()
         self._scan_deque = deque(maxlen=args.max_deque_size)
-        self._last_odom = None#Odometry()
+        self._last_odom = None #Odometry()
         self._odom_deque = deque(maxlen=args.max_deque_size)
-        self._last_goal = None#PoseStamped()
+        self._last_goal = None #PoseStamped()
         self._last_global_plan = None
         self._last_subgoal = None
 
@@ -56,13 +56,14 @@ class Observer():
         self._goal_sub = message_filters.Subscriber(f"{self.ns_prefix}goal", PoseStamped, queue_size=1)
         self._goal_sub.registerCallback(self._goal_callback)
 
-       # self._subgoal_sub = message_filters.Subscriber(f"{self.ns_prefix}subgoal", PoseStamped)
-       # self._subgoal_sub.registerCallback(self._subgoal_callback)
+        if not train_mode:
+            self._subgoal_sub = message_filters.Subscriber(f"{self.ns_prefix}subgoal", PoseStamped)
+            self._subgoal_sub.registerCallback(self._subgoal_callback)
 
-       # self._globalplan_sub = message_filters.Subscriber(f"{self.ns_prefix}globalPlan", Path)
-       # self._globalplan_sub.registerCallback(self._global_plan_callback)
+            self._globalplan_sub = message_filters.Subscriber(f"{self.ns_prefix}globalPlan", Path)
+            self._globalplan_sub.registerCallback(self._global_plan_callback)
 
-    def _prepare_observation_space(self, args):
+    def _prepare_observation_space(self):
         
         # lidar scan
         scan = (spaces.Box(low=0, high=self._lidar_range, shape=(self._num_lidar_beams,), dtype=np.float32),)
@@ -133,11 +134,13 @@ class Observer():
 
     def _global_plan_callback(self, global_plan_msg):
         """ callback for global plan subsriber """
-        self._last_global_plan = global_plan_msg
+        if global_plan_msg is not None:
+            self._last_global_plan = global_plan_msg
 
     def _subgoal_callback(self, subgoal_msg):
         """ callback for subgoal subscriber """
-        self._last_subgoal = subgoal_msg
+        if subgoal_msg is not None:
+            self._last_subgoal = subgoal_msg
 
     def get_observation(self):
         """get current observations from subscribed topics excluding global plan and subgoal"""
@@ -305,6 +308,8 @@ class Observer():
         self._last_goal = None
         self._last_odom = None
         self._last_scan = None
+        self._last_global_plan = None
+        self._last_subgoal = None
 
     def reset(self):
         """ resets observer for new episode """

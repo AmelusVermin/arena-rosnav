@@ -6,6 +6,7 @@ import time
 import re
 import nav_msgs
 import random
+import scipy.spatial
 
 from flatland_msgs.srv import StepWorld, StepWorldRequest
 from gym import spaces
@@ -68,6 +69,7 @@ class FlatlandEnv(gym.Env):
         self._num_lidar_beams = args.num_lidar_beams
         self._extended_eval = args.extended_eval
         self._max_deque_size = args.max_deque_size
+        self._global_plan_dist_threshold = args.global_plan_dist_threshold
         # observer related inits
         self._observer = Observer(ns, args)
         self.observation_space = self._observer.get_agent_observation_space()
@@ -96,6 +98,7 @@ class FlatlandEnv(gym.Env):
         self._mp_interval = args.mid_planner_call_interval
         self._last_global_plan = None
         self._last_subgoal = None
+        self._kdtree = None
 
         # setup rewarding
         if args.safe_dist is None:
@@ -191,9 +194,26 @@ class FlatlandEnv(gym.Env):
         robot_pose_2D = obs_dict['robot_pose']
         global_goal = obs_dict['global_goal']
 
+        # calculate global plan according to given interval or if set -1, 
         # get global plan, check if valid and publish it
-        if (self._steps_curr_episode % self._gp_interval) == 0:
-            rospy.logdebug(f"replan global plan")
+        # convert global plan Path message to nparray
+        
+        assert self._last_global_plan is not None, "last global plan is None"
+        
+
+        recalc_global_plan = False
+        if self._gp_interval == -1:     
+            if self._kdtree is None:
+                recalc_global_plan = True       
+            else:
+                dist_to_plan, _ = self._kdtree.query([robot_pose_2D.x, robot_pose_2D.y])
+                print(f"{self.ns}:distance to global plan: {dist_to_plan}")
+                if dist_to_plan > self._global_plan_dist_threshold:
+                    recalc_global_plan = True
+
+        condition_interval = self._gp_interval >= 1 and (self._steps_curr_episode % self._gp_interval) == 0
+        if condition_interval or recalc_global_plan:
+            print(f"replan global plan at step {self._steps_curr_episode}")
             global_plan, success = self._global_planner.get_global_plan(
                 global_goal, odom)
             assert global_plan is not None, "global plan is None!"
@@ -205,9 +225,9 @@ class FlatlandEnv(gym.Env):
         assert self._last_global_plan is not None, "no global plan is available for this step!"
 
         # get subgoal, check if valid and publish it
-        if (self._steps_curr_episode % self._mp_interval) == 0:
+        if (self._steps_curr_episode % self._mp_interval) == 0 or recalc_global_plan:
             rospy.logdebug(f"replan subgoal")
-            subgoal = self._mid_planner.get_subgoal(global_plan, odom)
+            subgoal = self._mid_planner.get_subgoal(self._last_global_plan, odom)
             assert subgoal is not None, "subgoal is None!"
             assert isinstance(
                 subgoal, PoseStamped), "subgoal is not type of PoseStamped!"
@@ -215,12 +235,12 @@ class FlatlandEnv(gym.Env):
             self._mid_planner_pub.publish(subgoal)
         assert self._last_subgoal is not None, "no subgoal is available for this step!"
 
-        # convert global plan Path message to nparray
-        global_plan_array = Observer.process_global_plan_msg(
-            self._last_global_plan)
-
+        
+        global_plan_array = Observer.process_global_plan_msg(self._last_global_plan)
         # prepare agent observation
-        global_plan_length = get_path_length(global_plan_array)
+        global_plan_length = get_path_length(global_plan_array) 
+        if recalc_global_plan:
+            self._kdtree = scipy.spatial.cKDTree(global_plan_array)
         
         obs_dict["global_plan"] = self._last_global_plan
         obs_dict["subgoal"] = self._last_subgoal
@@ -346,6 +366,7 @@ class FlatlandEnv(gym.Env):
         global_plan, success = self._global_planner.get_global_plan(
             global_goal, odom)
         self._last_global_plan = global_plan
+        
         self._global_planner_pub.publish(global_plan)
         # get subgoal and publish it
         rospy.logdebug(f"{self.ns}: reset, get subgoal!")
@@ -354,6 +375,7 @@ class FlatlandEnv(gym.Env):
         self._mid_planner_pub.publish(subgoal)
         # convert global plan Path message to nparray
         global_plan_array = Observer.process_global_plan_msg(global_plan)
+        self._kdtree = scipy.spatial.cKDTree(global_plan_array)
         # prepare agent observation
         
         obs_dict["global_plan"] = self._last_global_plan

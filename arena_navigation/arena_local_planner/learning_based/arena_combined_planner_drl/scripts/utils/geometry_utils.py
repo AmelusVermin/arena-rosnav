@@ -6,15 +6,21 @@ from scipy.interpolate import splprep, BSpline, splev, splrep
 from scipy.integrate import trapz
 import matplotlib.pyplot as plt
 
+
+
+
+
 def get_pose_difference(pose1: Pose2D, pose2: Pose2D):
+        assert not np.isnan([pose1.x, pose1.y, pose1.theta]).any(), f"pose1 has nan: {[pose1.x, pose1.y, pose1.theta]}" 
+        assert not np.isnan([pose2.x, pose2.y, pose2.theta]).any(), f"pose1 has nan: {[pose2.x, pose2.y, pose2.theta]}" 
         y_relative = pose1.y - pose2.y
         x_relative = pose1.x - pose2.x
         rho = (x_relative ** 2 + y_relative ** 2) ** 0.5
         theta = (np.arctan2(y_relative, x_relative) - pose2.theta + 4 * np.pi) % (
             2 * np.pi
         ) - np.pi
-        assert not np.isnan([rho, theta]).any(), "rho or theta is nan: {rho}, {theta}, {pose1}, {pose2}"
-        assert not np.isinf([rho, theta]).any(), "rho or theta is inf: {rho}, {theta}, {pose1}, {pose2}" 
+        assert not np.isnan([rho, theta]).any(), f"rho or theta is nan: {rho}, {theta}, {pose1}, {pose2}"
+        assert not np.isinf([rho, theta]).any(), f"rho or theta is inf: {rho}, {theta}, {pose1}, {pose2}" 
         return rho, theta
 
 def pose3D_to_pose2D(pose3d):

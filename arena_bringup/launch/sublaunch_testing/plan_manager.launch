@@ -19,6 +19,7 @@
         <param name="tolerance_approach"    value="$(arg tolerance_approach)"/>
         <param name="timeout_goal"          value="$(arg timeout_goal)"/>
         <param name="timeout_subgoal"       value="$(arg timeout_subgoal)"/>
+        <remap from="/move_base_simple/goal" to="/goal"/>
     </node>
 
 

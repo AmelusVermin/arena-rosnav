@@ -36,6 +36,13 @@ def get_config_arguments(command_line_args: argparse.Namespace, settings_path:st
     save_paths = setup_paths(args)
     return args, save_paths
 
+def get_run_configs(config_path: str):
+    args = argparse.ArgumentParser().parse_args()
+    args = _add_robot_config(args)
+    args = add_yaml_config(args, config_path)
+    return args
+
+
 def _add_robot_config(args):
     """parses robot related config file from simulator setup package and adds important ones to the given args"""
     # get necessary robot parameters
