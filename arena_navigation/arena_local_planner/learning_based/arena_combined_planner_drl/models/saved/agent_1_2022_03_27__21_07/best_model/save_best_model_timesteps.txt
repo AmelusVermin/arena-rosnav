@@ -1,4 +1,0 @@
-n_calls: 14400, eval_calls: 1
-n_calls: 43200, eval_calls: 3
-n_calls: 115200, eval_calls: 8
-n_calls: 144000, eval_calls: 10
