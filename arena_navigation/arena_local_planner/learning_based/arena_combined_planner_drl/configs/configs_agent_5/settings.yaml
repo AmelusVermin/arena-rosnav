@@ -34,7 +34,7 @@ environment:
   # interval in steps when the planners are called. 
   # 1 = every step, 2 = every 2 steps the planner is called and the global_plan/subgoal gets updated
   global_planner_call_interval: -1
-  mid_planner_call_interval: 1
+  mid_planner_call_interval: 5
   global_plan_dist_threshold: 3
 
 training:
@@ -55,7 +55,7 @@ training:
   n_epochs: 3
   clip_range: 0.22
   normalize: True
-  total_timesteps: 40000000
+  total_timesteps: 40089600
   train_verbose: 1
   seed: 64664
 
@@ -65,7 +65,7 @@ model:
   # model_path and update_params need to be set if true
   load_model: false
   # string: path to zip file containing a model
-  model_path: "/home/marvin/catkin_ws/src/arena-rosnav/arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/models/trained/AGENT_8_2021_10_11__20_34/best_model.zip"
+  model_path: "models/saved/agent_1_2022_04_17__11_16/newest_model/newest_model.zip"
   # boolean: true if the saved model params shall be overwritten by the current config values or not
   # paths are definitly overwritten as they might not exist anymore
   overwrite_params: false
