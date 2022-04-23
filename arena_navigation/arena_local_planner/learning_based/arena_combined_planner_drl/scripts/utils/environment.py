@@ -202,7 +202,7 @@ class FlatlandEnv(gym.Env):
         
 
         recalc_global_plan = False
-        if self._gp_interval == -1:     
+        if self._gp_interval <= 0:     
             if self._kdtree is None:
                 recalc_global_plan = True       
             else:
