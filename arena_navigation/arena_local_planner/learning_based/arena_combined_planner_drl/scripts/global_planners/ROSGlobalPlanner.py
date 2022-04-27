@@ -1,3 +1,4 @@
+from cgitb import reset
 from sys import stderr, stdout
 import numpy as np
 import rospy
@@ -35,6 +36,18 @@ class ROSGlobalPlanner(GlobalPlanner):
         # prepare variables
         self._last_successful_plan = None
 
+    def is_pose_valid(self, pose):
+        result = True
+        if np.isnan([pose.pose.position.x, 
+                    pose.pose.position.y, 
+                    pose.pose.orientation.x, 
+                    pose.pose.orientation.y,
+                    pose.pose.orientation.z,
+                    pose.pose.orientation.w]).any():
+            result = False
+        
+        return result
+
     def get_global_plan(self, goal, odom):
         """ Calls the global planner service with the given goal and returns response. Ignores odom """
         
@@ -53,6 +66,10 @@ class ROSGlobalPlanner(GlobalPlanner):
             success: bool = response.success
             global_plan.header = header
             rospy.logdebug(f"recieved path of length in namespace '{self.ns}': {len(global_plan.poses)}, {success}")
+            valid_poses = [pose for pose in global_plan.poses if self.is_pose_valid(pose)]
+            global_plan.poses = valid_poses
+            if len(valid_poses) < 1:
+                success = False
         except rospy.ServiceException as e:
             rospy.logerr(f"Service call failed in namespace '{self.ns}': {e}")
 
