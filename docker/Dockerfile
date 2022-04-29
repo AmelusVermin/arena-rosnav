@@ -4,6 +4,9 @@ FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
 # set workdir
 SHELL ["/bin/bash", "-c"]
 
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64/7fa2af80.pub
+
 # update all programs and software properties common for adding repos
 RUN apt-get update \
 &&  apt-get -y upgrade \

@@ -55,7 +55,7 @@
   <arg name="odom_frame_id"     value="odom"/>
   <arg name="base_frame_id"     value="base_footprint"/>
   <arg name="odom_ground_truth" default="/odometry/ground_truth"/>
-  <remap from="move_base_simple/goal" to="/goal"/>
+  <!-- <remap from="move_base_simple/goal" to="/goal"/> -->
   <!-- data recorder -->
   <!-- <group if="$(eval arg('use_recorder') == true)">
     <node pkg="arena_evaluation" name="data_recorder_node" type="data_recorder_node.py" />
@@ -85,13 +85,7 @@
     <arg name="odom_frame_id"     value="$(arg odom_frame_id)"/>
   </include>
 
-  <!-- start task_generator node -->
-  <arg name="timeout"        default="3.0"/>
-  <include file="$(find arena_bringup)/launch/sublaunch_testing/task_generator.launch" unless="$(eval arg('disable_scenario') or arg('train_mode'))">
-   <arg name="scenarios_json_path"  value="$(find simulator_setup)/scenarios/$(arg scenario_file)"/>
-   <arg name="auto_reset"           value="$(arg reset)"/>
-   <arg name="timeout"              value="$(arg timeout)"/>
-  </include>
+  
 
   <!-- <include file="$(find arena_bringup)/launch/sublaunch_testing/sensor_sim.launch" unless="$(eval arg('disable_scenario') or arg('train_mode'))">
   </include> -->
@@ -111,7 +105,7 @@
     <!--meter, double -->
     <!--sec, double -->
      <!--sec, double -->
-  <!-- <include file="$(find arena_bringup)/launch/sublaunch_testing/plan_manager.launch">
+  <include file="$(find arena_bringup)/launch/sublaunch_testing/plan_manager.launch">
     
     <arg name="train_mode"        value="$(arg train_mode)"/>
     <arg name="global_frame_id"   value="$(arg global_frame_id)"/>
@@ -120,12 +114,18 @@
     
     <arg name="look_ahead_distance"     default="2.3"/>  
     <arg name="tolerance_approach"      default="0.6"/>   
-    <arg name="timeout_goal"            value="1"/>  
-    <arg name="timeout_subgoal"         value="1" />  
+    <arg name="timeout_goal"            value="300"/>  
+    <arg name="timeout_subgoal"         value="180" />  
     
-  </include> -->
+  </include>
 
-
+  <!-- start task_generator node -->
+  <arg name="timeout"        default="3.0"/>
+  <include file="$(find arena_bringup)/launch/sublaunch_testing/task_generator.launch" unless="$(eval arg('disable_scenario') or arg('train_mode'))">
+   <arg name="scenarios_json_path"  value="$(find simulator_setup)/scenarios/$(arg scenario_file)"/>
+   <arg name="auto_reset"           value="$(arg reset)"/>
+   <arg name="timeout"              value="$(arg timeout)"/>
+  </include>
   <!-- <include file="$(find arena_bringup)/launch/sublaunch_testing/intermediate_planner.launch">
 
   </include>  -->

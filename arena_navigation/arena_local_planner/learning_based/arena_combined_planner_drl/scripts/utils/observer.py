@@ -15,7 +15,7 @@ from .geometry_utils import pose3D_to_pose2D, get_pose_difference, get_path_leng
 
 class Observer():
 
-    def __init__(self, ns, args, train_mode=True):
+    def __init__(self, ns, args, train_mode=True, goal_topic="goal"):
         # prepare namespace
         self.ns = ns
         self.ns_prefix = "" if (ns == "" or ns is None) else f"/{ns}/"
@@ -45,22 +45,23 @@ class Observer():
 
         # define subscribers
         # lidar scan
-        self._scan_sub = message_filters.Subscriber(f"{self.ns_prefix}scan", LaserScan, queue_size=1)
+        self._scan_sub = message_filters.Subscriber(f"{self.ns_prefix}scan", LaserScan, queue_size=5)
         self._scan_sub.registerCallback(self._scan_callback)
         
         # odometry
-        self._odom_sub = message_filters.Subscriber(f"{self.ns_prefix}odom", Odometry, queue_size=1)
+        self._odom_sub = message_filters.Subscriber(f"{self.ns_prefix}odom", Odometry, queue_size=5)
         self._odom_sub.registerCallback(self._odom_callback)
         
         # global goal
-        self._goal_sub = message_filters.Subscriber(f"{self.ns_prefix}goal", PoseStamped, queue_size=1)
+
+        self._goal_sub = message_filters.Subscriber(f"{self.ns_prefix}{goal_topic}", PoseStamped, queue_size=5)
         self._goal_sub.registerCallback(self._goal_callback)
 
         if not train_mode:
-            self._subgoal_sub = message_filters.Subscriber(f"{self.ns_prefix}subgoal", PoseStamped)
+            self._subgoal_sub = message_filters.Subscriber(f"{self.ns_prefix}subgoal", PoseStamped, queue_size=5)
             self._subgoal_sub.registerCallback(self._subgoal_callback)
 
-            self._globalplan_sub = message_filters.Subscriber(f"{self.ns_prefix}globalPlan", Path)
+            self._globalplan_sub = message_filters.Subscriber(f"{self.ns_prefix}globalPlan", Path, queue_size=5)
             self._globalplan_sub.registerCallback(self._global_plan_callback)
 
     def _prepare_observation_space(self):
@@ -151,6 +152,10 @@ class Observer():
             self._last_odom = synced_odom
         # not all observations were set at least once in the current episode
         if self._last_odom is None or self._last_scan is None or self._last_goal is None:
+            if self._last_odom is None: print("odom is None")
+            if self._last_scan is None: 
+                print("scan is None")
+            if self._last_goal is None: print("goal is None")
             rospy.logdebug(f"odom: {self._last_odom}")
             rospy.logdebug(f"goal: {self._last_goal}")
             rospy.logdebug(f"scan: {self._last_scan}")
@@ -170,7 +175,10 @@ class Observer():
 
     def get_deployment_observation(self):
         """ get the current observation from subscribed topics including global plan and subgoal for deployment """
+        
         obs_dict = self.get_observation()
+        if obs_dict is None:
+            return None
         obs_dict["global_plan"] = self._last_global_plan
         obs_dict["subgoal"] = self._last_subgoal
         return obs_dict
