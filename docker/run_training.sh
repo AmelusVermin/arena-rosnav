@@ -26,8 +26,8 @@ roscd arena_combined_planner_drl/
 if [ -z ${eval_freq+x} ]; 
 then 
     echo "start training with eval frequency given in config file"
-    python3 scripts/train.py -cf $config_path
+    python3 scripts/train.py -cf $config_path 2>&1 | tee output.txt
 else 
     echo "start training with eval frequency from command line"
-    python3 scripts/train.py -cf $config_path -ef $eval_freq
+    python3 scripts/train.py -cf $config_path -ef $eval_freq 2>&1 | tee output.txt
 fi
