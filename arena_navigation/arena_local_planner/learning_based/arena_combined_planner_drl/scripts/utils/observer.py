@@ -151,7 +151,7 @@ class Observer():
             self._last_scan = synced_scan
             self._last_odom = synced_odom
         # not all observations were set at least once in the current episode
-        if self._last_odom is None or self._last_scan is None or self._last_goal is None or np.isnan([self._last_goal.position.x, self._last_goal.position.y, self._last_goal.orientation.w, self._last_goal.orientation.x, self._last_goal.orientation.y, self._last_goal.orientation.z, self._last_goal.orientation.w,]).any():
+        if self._last_odom is None or self._last_scan is None or self._last_goal is None or np.isnan([self._last_goal.pose.position.x, self._last_goal.pose.position.y, self._last_goal.pose.orientation.w, self._last_goal.pose.orientation.x, self._last_goal.pose.orientation.y, self._last_goal.pose.orientation.z, self._last_goal.pose.orientation.w,]).any():
             if self._last_odom is None: print("odom is None")
             if self._last_scan is None: 
                 print("scan is None")
