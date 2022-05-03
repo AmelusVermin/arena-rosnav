@@ -1,12 +1,15 @@
 #! /usr/bin/env python3
 
 from time import sleep
+
+import rospkg
 import rospy
 import message_filters
 import os
 import pickle
 from stable_baselines.ppo2 import PPO2
 from geometry_msgs.msg import Twist, PoseStamped
+from std_msgs.msg import Int16
 from utils.observer import Observer
 from utils.argparser import get_run_configs
 import time
@@ -14,7 +17,7 @@ import numpy as np
 
 class AgentNode():
     def __init__(self, args):
-        rospy.init_node(f"combined_planner_agent")
+        
         print("init run node")
         ns = rospy.get_param("ns", "")
         self.ns_prefix = "" if (ns == "" or ns is None) else f"/{ns}/"
@@ -31,7 +34,7 @@ class AgentNode():
         self._goal_sub = message_filters.Subscriber(f"{self.ns_prefix}goal", PoseStamped, queue_size=1)
         self._goal_sub.registerCallback(self._goal_callback)
 
-        self._scenario_reset = message_filters.Subscriber(f"/scenario_reset", PoseStamped, queue_size=1)
+        self._scenario_reset = message_filters.Subscriber(f"/scenario_reset", Int16, queue_size=1)
         self._goal_sub.registerCallback(self._reset_callback)
         print("init done")
         
@@ -103,7 +106,7 @@ class AgentNode():
                 proc_obs = np.tile(proc_obs, (self._n_env, 1))
                 # get action 
                 print(f"get predictions: {proc_obs.shape}")
-                actions, states = self._model.predict(proc_obs, states, done_masks, deterministic=True)
+                actions, states = self._model.predict(proc_obs, states, done_masks, deterministic=False)
                 if self._reset:
                     done_masks = [False for _ in range(self._n_env)]
                     self._reset = False
@@ -117,6 +120,21 @@ class AgentNode():
 
 
 if __name__ == "__main__":
-    args = get_run_configs("configs/run_configs.yaml")
+    rospy.init_node(f"combined_planner_agent")
+    config_path:str = rospy.get_param("/combined_planner_drl/config", "configs/default_configs/default_run_configs.yaml")
+    pkg = rospkg.RosPack().get_path("arena_combined_planner_drl")
+
+    #check if relative path is give and make it absolute if necessary
+    if not config_path.startswith("/"):
+        config_path = os.path.join(pkg, config_path)
+    args = get_run_configs(config_path)
+
+    #check if relative path is given and make it absolute if necessary
+    if not args.model_path.startswith("/"):
+        args.model_path = os.path.join(pkg, args.model_path)
+    if not args.vec_norm_path.startswith("/"):
+        args.vec_norm_path = os.path.join(pkg, args.vec_norm_path)
+
+
     agent_node = AgentNode(args)
     agent_node.run_node()

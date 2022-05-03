@@ -151,7 +151,7 @@ class Observer():
             self._last_scan = synced_scan
             self._last_odom = synced_odom
         # not all observations were set at least once in the current episode
-        if self._last_odom is None or self._last_scan is None or self._last_goal is None:
+        if self._last_odom is None or self._last_scan is None or self._last_goal is None or np.isnan([self._last_goal.position.x, self._last_goal.position.y, self._last_goal.orientation.w, self._last_goal.orientation.x, self._last_goal.orientation.y, self._last_goal.orientation.z, self._last_goal.orientation.w,]).any():
             if self._last_odom is None: print("odom is None")
             if self._last_scan is None: 
                 print("scan is None")
@@ -226,6 +226,7 @@ class Observer():
         else:
             scan_obs = np.zeros(self._num_lidar_beams, dtype=float)
         # calculate difference between subgoal and robotpose to have an relative measurement for the agent
+        assert not np.isnan([goal.position.x, goal.position.y, goal.orientation.w, goal.orientation.x, goal.orientation.y, goal.orientation.z, goal.orientation.w,]).any() , f"goal has nan: {[goal.position.x, goal.position.y, goal.orientation.w, goal.orientation.x, goal.orientation.y, goal.orientation.z, goal.orientation.w,]}" 
         goal_2D = pose3D_to_pose2D(goal)
         goal_obs = np.array(get_pose_difference(goal_2D, robot_pose_2D))
 

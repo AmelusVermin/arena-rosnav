@@ -53,8 +53,8 @@ class TaskGenerator:
         else:
             # declare new service task_generator, request are handled in callback task generate
             self.reset_task()
-            # self.task_generator_srv_ = rospy.Service(
-            #     'task_generator', Empty, self.reset_srv_callback)
+        self.task_generator_srv_ = rospy.Service(
+            'task_generator', Empty, self.reset_srv_callback)
                 
         self.err_g = 100
         

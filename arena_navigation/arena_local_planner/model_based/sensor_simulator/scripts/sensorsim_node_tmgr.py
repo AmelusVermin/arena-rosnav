@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from visualization_msgs.msg import MarkerArray
 import rosnode
 import rospy
@@ -116,7 +116,7 @@ class sensor():
         
         # print(self.cluster)
     
-    def cb_marker(self, msg):
+    def cb_marker(self, msg, topic):
 
         if self.update_cluster:
             # print(topic)
@@ -162,6 +162,7 @@ def run():
 
 if __name__ == '__main__':
     run()
+
 
 
 

@@ -37,7 +37,7 @@ def get_config_arguments(command_line_args: argparse.Namespace, settings_path:st
     return args, save_paths
 
 def get_run_configs(config_path: str):
-    args = argparse.ArgumentParser().parse_args()
+    args = argparse.Namespace()
     args = _add_robot_config(args)
     args = add_yaml_config(args, config_path)
     return args

@@ -1,6 +1,6 @@
 <launch>
+  <arg name="config" default="configs/default_configs/default_run_configs.yaml" />
   <node name="combined_planner_drl" pkg="arena_combined_planner_drl" type="run.py">
-    <remap from="/move_base_simple/goal" to="/goal"/>
-    <remap from="/move_base/GlobalPlanner/plan" to="/globalPlan"/>
+    <param name="config" value="$(arg config)"/>
   </node>
 </launch>

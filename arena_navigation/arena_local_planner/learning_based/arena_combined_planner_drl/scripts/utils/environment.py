@@ -189,6 +189,7 @@ class FlatlandEnv(gym.Env):
         # get current observation
         rospy.logdebug(f"ns:{self.ns}, get observation")
         obs_dict = self._observer.get_observation()
+        assert obs_dict is not None, "obs are None"
         scan = obs_dict['laser_scan']
         odom = obs_dict['odom']
         robot_pose_2D = obs_dict['robot_pose']

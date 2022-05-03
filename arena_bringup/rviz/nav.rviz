@@ -167,12 +167,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: Global_costmap
       Topic: /move_base/global_costmap/costmap
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 1
       Arrow Length: 0.30000001192092896
       Axes Length: 0.30000001192092896
@@ -370,7 +370,7 @@ Visualization Manager:
       Marker Topic: /planning_vis/goal
       Name: Goal
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -878,5 +878,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 2560
-  X: 0
-  Y: 743
+  X: 8
+  Y: 751
