@@ -1,0 +1,110 @@
+# important note when adding params! unique key names across all nested params are assumed. 
+# This file gets flattened during parsing without adding prefixes to the key names
+robot:
+  ## settings related to the robot itself
+  robot: "myrobot"
+  continuous_actions:
+    linear_range: [0, 0.3]
+    angular_range: [-2.7, 2.7]
+    agent_name: "agent_5"
+environment:
+  ## settings related to the gym environment
+  max_distance_goal: 100
+  min_dist_goal: 4
+  global_planner_class: "global_planners.ROSGlobalPlanner.ROSGlobalPlanner" #"global_planners.dummy_global.Dummy"
+  mid_planner_class: "mid_planners.ignc_intermediate_planner.IntermediatePlanner" #"mid_planners.dummy_mid.Dummy"
+  # default: "configs/training_curriculum.yaml"
+  task_curriculum_path: "training_curriculum.yaml"
+  # the goal is reached when the robot enters the circle determined by this radius around the goal, the orientation is ignored
+  goal_radius: 0.3075
+  reward_fnc: "rule_05"
+  # a tolerance value that is used for collision checks. If the robot gets closer to an obstacle than this tolerance, a collsion will be detected. scan.min <= robot_radius + collision_tolerance.
+  collision_tolerance: 0 
+  # task mode of task generator: "random" or "staged" 
+  task_mode: "staged"
+  task_curr_stage: 5
+  safe_dist: null
+  extended_eval: True
+  train_max_steps_per_episode: 1000
+  # unused, only set for compatability issues with hyperparameter.json
+  eval_max_steps_per_episode: 2000
+  use_first_synced_obs: True
+  max_deque_size: 10
+  sync_slop: 0.05
+  # interval in steps when the planners are called. 
+  # 1 = every step, 2 = every 2 steps the planner is called and the global_plan/subgoal gets updated
+  global_planner_call_interval: -1
+  mid_planner_call_interval: 5
+  global_plan_dist_threshold: 3
+
+training:
+  ## settings related to training and model
+  #sub directory of this package
+  train_log_dir: "logs/training_logs"
+  tensorboard_log_dir: "logs/tensorboard"
+  ## learning related settings
+  batch_size: 19200
+  gamma: 0.99 
+  ent_coef: 0.005 
+  learning_rate: 0.0003
+  vf_coef: 0.22
+  max_grad_norm: 0.5
+  gae_lambda: 0.95
+  # number of envrionments run in parallel should be a multiple of mini_batch_size for recurrent policies
+  mini_batch_size: 8
+  n_epochs: 3
+  clip_range: 0.22
+  normalize: True
+  total_timesteps: 22579200
+  train_verbose: 1
+  seed: 64664
+
+model:
+  ## model related settings. Used in model_builder.py
+  # boolean: true if an existing model shall be loaded. 
+  # model_path and update_params need to be set if true
+  load_model: true
+  # string: path to zip file containing a model
+  model_path: "models/saved/agent_5_2022_05_07__09_04/newest_model/newest_model.zip"
+  # boolean: true if the saved model params shall be overwritten by the current config values or not
+  # paths are definitly overwritten as they might not exist anymore
+  overwrite_params: false
+  # string: agent_type that shall be created like CUSTOM_MLP, or AGENT_6, use command line option --show_registered_types or -srt
+  # is ignored if model_path is true
+  agent_type: "CUSTOM_MLP_LN_LSTM" #"CUSTOM_MLP"
+  # determines used observation space: available "BASE_SUB_LENGTH" (goal, subgoal, global plan length, scan), "BASE_SUB_POINTS" (goal, subgoal, global plan path, scan), "BASE_NON_NON" (goal, scan), 
+  #  "BASE_SUB_NON" (goal, subgoal, scan), "BASE_NON_LENGTH" (goal, global plan length, scan), "BASE_NON_POINTS"
+  observation_space_type: "BASE_NON_LENGTH" 
+  num_global_plan_points: 50
+  gp_point_skip_rate: 4
+
+trainstage:
+  ## settings related to creating TrainStage callback
+  # type can be either 'succ' or 'rew'
+  stage_threshold_type: "succ"
+  stage_upper_thres: 0.80
+  stage_lower_thres: 0.0
+  stage_verbose: 1
+
+evaluation:
+  ## settings related to creating evaluation callback
+  model_save_dir: "models/trained/"
+  # n_eval_episodes: number of episodes to evaluate agent on
+  n_eval_episodes: 30
+  # eval_freq: evaluate the agent every eval_freq train timesteps
+  eval_freq: 14400
+  deterministic: True
+
+stoptraining:
+  ## settings related to creating stop training callback
+  stop_threshhold_type: "succ"
+  stop_reward_threshhold: 0.90
+  stop_verbose: 1
+
+custom_network:
+  shared_layers: "256-256-256"
+  policy_layer_sizes: "256-256-256-256"
+  value_layer_sizes: "256-256-256-256"
+  number_lstm_cells: 512
+  # can be "relu", "sigmoid" or "tanh"
+  act_fn: "relu"
