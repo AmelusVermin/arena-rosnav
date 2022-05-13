@@ -1,0 +1,89 @@
+reset_costmap_automatically: True
+reset_costmap_interval: 3
+global_planner_type: global_planner/GlobalPlanner 
+
+GlobalPlanner:
+  # http://wiki.ros.org/global_planner
+  all_unknown: true # default true
+  default_tolerance: 0.0 # default 0.0
+  visualize_potential: false # default false
+  use_dijkstra: true # default true
+  use_quadratic: true # default true
+  use_grid_path: false # default false
+  old_navfn_behavior: false # default false
+  lethal_cost: 254 # default 253
+  neutral_cost: 50 # default 50
+  cost_factor: 3.0 # default 3.0
+  publish_potential: true # default true
+  orientation_mode: 0 # default 0
+  orientation_window_size: 1 # default 1
+  outline_map: true # default true
+
+global_costmap:
+  # http://wiki.ros.org/costmap_2d
+  global_frame: "/map" # default "/map"
+  robot_base_frame: "base_link" # default "base_link"
+  transform_tolerance: 0.2 # default 0.2
+  update_frequency: 10.0 # default 5.0
+  publish_frequency: 1.0 # default 0.0
+  rolling_window: false # default false
+  always_send_full_costmap: false # default false
+
+  # can be overwritten by some layers like static_layer
+  width: 10 # default 10
+  height: 10 # default 10
+  resolution: 0.025 # default 0.05
+  origin_x: 0.0 # default 0.0
+  origin_y: 0.0 # default 0.0
+
+  static_layer:
+    # http://wiki.ros.org/costmap_2d/hydro/staticmap
+    unkown_cost_value: -1 # default -1
+    lethal_cost_threshold: 254 # default 100
+    map_topic: "map" # default "map"
+    first_map_only: false # default false
+    subscribe_to_updates: false # default false
+    track_unkown_space: true  # default true
+    use_maximum: false # default false
+    trinary_costmap: true # default true
+
+  obstacle_layer:
+    # http://wiki.ros.org/costmap_2d/hydro/obstacles
+    observation_sources: scan
+    # Global Filtering parameters
+    max_obstacle_height: 2.0 # default 2.0
+    obstacle_range: 3.5 # default 2.5
+    # Raytrace range has to be larger than laser range + 1 in order to correctly track dynamic obstacles with the filtered
+    # scan messages.
+    raytrace_range: 5 # default 3.0
+
+    # Obstacle Costmap Plugin parameters
+    track_unknown_space: true # default false
+    footprint_clearing_enabled: true # default true
+    combination_method: 1 # default 1
+    
+    scan: { 
+      topic: scan, # default source_name scan
+      sensor_frame: "", # default ""
+      observation_persistence: 0.0, # default 0.0
+      expected_update_rate: 0.0, # default 0.0
+      data_type: LaserScan, # default "PointCloud"
+      clearing: true, # default false
+      marking: true, # default true
+      max_obstacle_height: 2.0, # default 2.0
+      min_obstacle_height: 0.0, # default 0.0
+      obstacle_range: 3.5, # default 2.5
+      raytrace_range: 5, # default 3.0
+      inf_is_valid: true, # default false
+    }
+
+  inflation_layer:
+    # http://wiki.ros.org/costmap_2d/hydro/inflation
+    inflation_radius: 0.35 # default 0.55
+    cost_scaling_factor: 10.0 # default 10.0
+
+
+  plugins:
+    - { name: static_layer,        type: "costmap_2d::StaticLayer"}
+    - { name: obstacle_layer,      type: "costmap_2d::ObstacleLayer" }
+    - { name: inflation_layer,     type: "costmap_2d::InflationLayer" }
