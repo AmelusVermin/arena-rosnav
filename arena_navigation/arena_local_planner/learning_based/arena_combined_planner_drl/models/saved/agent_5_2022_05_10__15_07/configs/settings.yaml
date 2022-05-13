@@ -55,7 +55,7 @@ training:
   n_epochs: 3
   clip_range: 0.22
   normalize: True
-  total_timesteps: 460.800
+  total_timesteps: 460800
   train_verbose: 1
   seed: 64664
 
