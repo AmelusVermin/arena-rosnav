@@ -1,0 +1,23 @@
+{
+    "agent_name": "agent_4_2022_05_07__19_35",
+    "robot": "myrobot",
+    "batch_size": 19200,
+    "gamma": 0.99,
+    "n_steps": 1200,
+    "ent_coef": 0.005,
+    "learning_rate": 0.0003,
+    "vf_coef": 0.22,
+    "max_grad_norm": 0.5,
+    "gae_lambda": 0.95,
+    "m_batch_size": 8,
+    "n_epochs": 3,
+    "clip_range": 0.22,
+    "reward_fnc": "rule_05",
+    "discret_actions_space": false,
+    "normalize": true,
+    "task_mode": "staged",
+    "curr_stage": 5,
+    "train_max_steps_per_episode": 1000,
+    "eval_max_steps_per_episode": 2000,
+    "goal_radius": 0.3075
+}
