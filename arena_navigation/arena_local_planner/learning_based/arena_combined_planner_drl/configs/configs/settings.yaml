@@ -6,7 +6,7 @@ robot:
   continuous_actions:
     linear_range: [0, 0.3]
     angular_range: [-2.7, 2.7]
-    agent_name: null
+    agent_name: "test_agent"
 environment:
   ## settings related to the gym environment
   max_distance_goal: 400
@@ -22,20 +22,20 @@ environment:
   collision_tolerance: 0 
   # task mode of task generator: "random" or "staged" 
   task_mode: "staged"
-  task_curr_stage: 5
+  task_curr_stage: 2
   safe_dist: null
   extended_eval: True
   train_max_steps_per_episode: 1000
   # unused, only set for compatability issues with hyperparameter.json
-  eval_max_steps_per_episode: 100 # 2000
+  eval_max_steps_per_episode: 200 # 2000
   use_first_synced_obs: True
   max_deque_size: 10
   sync_slop: 0.05
   # interval in steps when the planners are called. 
   # 1 = every step, 2 = every 2 steps the planner is called and the global_plan/subgoal gets updated
-  global_planner_call_interval: 1
+  global_planner_call_interval: -1
   mid_planner_call_interval: 5
-  global_plan_dist_threshold: 1
+  global_plan_dist_threshold: 3
 
 training:
   ## settings related to training and model
@@ -43,7 +43,7 @@ training:
   train_log_dir: "logs/training_logs"
   tensorboard_log_dir: "logs/tensorboard"
   ## learning related settings
-  batch_size: 512 # 19200
+  batch_size: 2048 # 19200
   gamma: 0.99 
   ent_coef: 0.005 
   learning_rate: 0.0003
@@ -51,7 +51,7 @@ training:
   max_grad_norm: 0.5
   gae_lambda: 0.95
   # number of envrionments run in parallel should be a multiple of mini_batch_size for recurrent policies
-  mini_batch_size: 4
+  mini_batch_size: 1
   n_epochs: 3
   clip_range: 0.22
   normalize: True
@@ -82,7 +82,7 @@ trainstage:
   ## settings related to creating TrainStage callback
   # type can be either 'succ' or 'rew'
   stage_threshold_type: "succ"
-  stage_upper_thres: 0.8
+  stage_upper_thres: 0.0
   stage_lower_thres: 0.0
   stage_verbose: 1
 
@@ -90,9 +90,9 @@ evaluation:
   ## settings related to creating evaluation callback
   model_save_dir: "models/trained/"
   # n_eval_episodes: number of episodes to evaluate agent on
-  n_eval_episodes: 2 # 20
+  n_eval_episodes: 1 # 20
   # eval_freq: evaluate the agent every eval_freq train timesteps
-  eval_freq: 1024 #14400
+  eval_freq: 128 #14400
   deterministic: True
 
 stoptraining:
