@@ -131,4 +131,4 @@ RUN echo $'export PYTHONPATH=/catkin_ws/src/arena-rosnav:${PYTHONPATH}\n' >> /ro
 RUN echo $'source /catkin_ws/devel/setup.bash\n' >> /root/.bashrc
 
 WORKDIR /catkin_ws/src/arena-rosnav/
-COPY . .
+COPY . /arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/

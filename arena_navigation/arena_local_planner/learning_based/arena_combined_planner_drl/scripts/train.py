@@ -20,13 +20,6 @@ from utils.custom_callbacks import StopTrainingOnRewardThreshold, InitiateNewTra
 from policies.sb_policy_registry import PolicyRegistry
 from utils.hyperparameter_utils import write_hyperparameters_json
 
-
-def print_registered_types():
-    all_types = PolicyRegistry.get_all_registered_agents()
-    print("The following agent types are available:")
-    for i, agent_type in enumerate(all_types):
-        print(f"Type {i+1}: {agent_type}")
-
 if __name__ == '__main__':
     # get command line arguments and params from relevant config files 
     args = get_commandline_arguments()
@@ -45,12 +38,6 @@ if __name__ == '__main__':
     
     args, save_paths = get_config_arguments(args, settings_file)
     print(args.eval_freq)
-    # -srt flag is set: print the registered agent types and exit
-    if args.show_registered_types:
-        print_registered_types()
-        exit()
-    
-    # dict of existing log levels in ros
     
     # initiate ros node with according log level
     rospy.set_param("/enable_statistics", "true")

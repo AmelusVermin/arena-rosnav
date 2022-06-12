@@ -14,7 +14,6 @@ def get_commandline_arguments():
     parser = argparse.ArgumentParser(description='Perform training of global, intermediate and local planner together.')
     parser.add_argument('--log_level', '-l', type=str, choices=['debug', 'info', 'warn', 'error'], default="info")
     parser.add_argument("--n_envs", '-ne', type=int, default=0, help="number of parallel environments.")
-    parser.add_argument("--show_registered_types", '-srt', action="store_true", default=False, help="Prints the available agent types.")
     parser.add_argument("--configs_folder", '-cf', type=str, default="default", help="Loads the given settings files in the given folder instead of default one.")
     parser.add_argument("--eval_frequency", '-ef', type=int, default=None, help="replaces the eval_freq in settings.yaml")
     args = parser.parse_args()

@@ -273,7 +273,7 @@ def main():
     
     file_qunatitative = os.path.join(os.path.dirname(os.path.realpath(__file__)), "joined_data_stats.csv")
     file_quantitative_comparison = os.path.join(os.path.dirname(os.path.realpath(__file__)), "full_stats_quantitative.csv")
-    folder_qualitative = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data_2", "*.csv")
+    folder_qualitative = os.path.join(os.path.dirname(os.path.realpath(__file__)), "marvin_data_qualitative", "*.csv")
 
     # prepare output folder
     if not os.path.isdir(FOLDER):
