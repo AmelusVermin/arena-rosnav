@@ -24,7 +24,7 @@ environment:
   task_mode: "staged"
   task_curr_stage: 6
   safe_dist: null
-  extended_eval: True
+   
   train_max_steps_per_episode: 1000
   # unused, only set for compatability issues with hyperparameter.json
   eval_max_steps_per_episode: 2000
@@ -98,7 +98,7 @@ evaluation:
 stoptraining:
   ## settings related to creating stop training callback
   stop_threshhold_type: "succ"
-  stop_reward_threshhold: 0.90
+  stop_threshhold: 0.90
   stop_verbose: 1
 
 custom_network:

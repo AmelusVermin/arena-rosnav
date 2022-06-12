@@ -14,7 +14,7 @@ from flatland_msgs.srv import StepWorld
 from geometry_msgs.msg import Twist, PoseStamped
 from std_msgs.msg import String
 from task_generator.task_generator.tasks import *
-from .geometry_utils import pose3D_to_pose2D, get_pose_difference, get_path_length, get_landmarks
+from .geometry_utils import pose3D_to_pose2D, get_pose_difference, get_path_length
 from .observer import Observer
 from .reward import RewardCalculator
 from .task_manager import TaskManager
@@ -67,7 +67,6 @@ class FlatlandEnv(gym.Env):
         # set some arguments used outside the init method
         self._max_steps_per_episode = args.train_max_steps_per_episode if self._train_mode else args.eval_max_steps_per_episode
         self._num_lidar_beams = args.num_lidar_beams
-        self._extended_eval = args.extended_eval
         self._max_deque_size = args.max_deque_size
         self._global_plan_dist_threshold = args.global_plan_dist_threshold
         # observer related inits
@@ -110,7 +109,6 @@ class FlatlandEnv(gym.Env):
             goal_radius=args.goal_radius,
             rule=args.reward_fnc,
             collision_tolerance=args.collision_tolerance,
-            extended_eval=self._extended_eval,
             max_timesteps=self._max_steps_per_episode
         )
         self._reward_composition = {

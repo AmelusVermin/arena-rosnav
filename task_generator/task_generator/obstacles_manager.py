@@ -59,6 +59,7 @@ class ObstaclesManager:
         self.update_map(map_)
         self.obstacle_name_list = []
         self.obstacles_dict_points = {}
+        self.obstacles_dict_pos = {}
         self._obstacle_name_prefix = 'obstacle'
         # remove all existing obstacles generated before create an instance of this class
         self.remove_obstacles()
@@ -136,6 +137,7 @@ class ObstaclesManager:
                 else:
                     self.obstacle_name_list.append(spawn_request.name)
                     self.obstacles_dict_points[spawn_request.name] = (polygon_points, circle_radius)
+                    self.obstacles_dict_pos[spawn_request.name] = (spawn_request.pose.x, spawn_request.pose.y)
                     break
             if i_curr_try == max_num_try:
                 # raise rospy.ServiceException(f"({self.ns}) failed to register obstacles")
@@ -254,7 +256,7 @@ class ObstaclesManager:
         srv_request.pose.x = x
         srv_request.pose.y = y
         srv_request.pose.theta = theta
-
+        self.obstacles_dict_pos[obstacle_name] = (x,y)
         self._srv_move_model(srv_request)
 
     def reset_pos_obstacles_random(self, active_obstacle_rate: float = 1, forbidden_zones: Union[list, None] = None):
@@ -290,6 +292,7 @@ class ObstaclesManager:
             # TODO 0.2 is the obstacle radius. it should be set automatically in future.
             move_model_request.pose.x, move_model_request.pose.y, move_model_request.pose.theta = get_random_pos_on_map(
                 self._free_space_indices, self.map, 0.2, forbidden_zones)
+            self.obstacles_dict_pos[obstacle_name] = (move_model_request.pose.x, move_model_request.pose.y)
             self._srv_move_model(move_model_request)
             # get polygon points of object
             poly, circle = self.obstacles_dict_points[obstacle_name]

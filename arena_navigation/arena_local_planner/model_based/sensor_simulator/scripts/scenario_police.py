@@ -32,7 +32,7 @@ class police():
         self.sm = MarkerArray()
  
         # sub
-        self.scan = rospy.Subscriber('/scan',LaserScan, self.cbScan)
+        
         # rospy.Subscriber('/planning_vis/goal',Marker, self.get_pm_path)
         # rospy.Subscriber('/move_base/DWAPlannerROS/global_plan',Path, self.get_mb_path)
         # rospy.Subscriber('/move_base/TebLocalPlannerROS/global_plan',Path, self.get_mb_path)
@@ -59,7 +59,7 @@ class police():
 
         # publish static map
         self.pub_sm = rospy.Publisher('police/static_map', MarkerArray, queue_size=10)
-
+        self.scan = rospy.Subscriber('/scan',LaserScan, self.cbScan)
 
         rospy.Timer(rospy.Duration(0.5),self.publish_state)
 
@@ -144,12 +144,13 @@ class police():
     def cbScan(self,msg):
         scan_array = np.asarray(msg.ranges)
         d_min = np.nanmin(scan_array)
+        
         if np.isnan(d_min):
             d_min = 3.5
 
-        if d_min > 0.5:
+        if d_min > 0.45:
             self.collision_flag = False
-        if d_min <= 0.35 and not self.collision_flag:
+        if d_min <= 0.30 and not self.collision_flag:
             self.collision_flag = True
             self.n_col += 1 
             self.pub_col.publish(self.n_col)

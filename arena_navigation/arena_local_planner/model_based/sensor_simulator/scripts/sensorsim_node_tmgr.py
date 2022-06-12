@@ -116,7 +116,7 @@ class sensor():
         
         # print(self.cluster)
     
-    def cb_marker(self, msg, topic):
+    def cb_marker(self, msg):
 
         if self.update_cluster:
             # print(topic)
@@ -127,6 +127,7 @@ class sensor():
                 r = m.scale.x/2
                 label = 0
                 
+                topic = rospy.get_published_topics()
 
                 if "dynamic" in topic: 
                     if topic in self.obstacles_dyn:
@@ -149,7 +150,8 @@ class sensor():
                         label = int(label) 
                     self.obstacles_static[topic] = [pos, r, v, label]
             else:
-                print(msg)
+                pass
+                #print(msg)
 
 
 

@@ -6,56 +6,62 @@ docker build -t amelus/ros_training .
 docker run --name train_agent_1 -p 6006:6006 --gpus all amelus/ros_training ./docker/run_training.sh -n 16 -c configs/configs_agent_1/
 ``` 
 
-# Arena-Rosnav (IROS 21)
-A flexible, high-performance 2D simulator with configurable agents, multiple sensors, and benchmark scenarios for testing robotic navigation. 
+# Master Thesis DRL Planner Integration
+This repository is a fork of https://github.com/ignc-research/arena-rosnav which modifies the training of drl agents by integrating the global and subgoal planner into the training pipeline.
 
-Arena-Rosnav uses Flatland as the core simulator and is a modular high-level library for end-to-end experiments in embodied AI -- defining embodied AI tasks (e.g. navigation, obstacle avoidance, behavior cloning), training agents (via imitation or reinforcement learning, or no learning at all using conventional approaches like DWA, TEB or MPC), and benchmarking their performance on the defined tasks using standard metrics.
-
-
-| <img width="400" height="400" src="/img/rosnav1.gif"> | <img width="400" height="400" src="/img/rosnav2.gif"> |
-|:--:| :--:| 
-| *Training Stage* | *Deployment Stage* |
-
-
-## What is this repository for?
-Train DRL agents on ROS compatible simulations for autonomous navigation in highly dynamic environments. Flatland-DRL integration is inspired by Ronja Gueldenring's work: [drl_local_planner_ros_stable_baselines](https://github.com/RGring/drl_local_planner_ros_stable_baselines.git). Test state of the art local and global planners in ROS environments both in simulation and on real hardware. Following features are included:
-
-* Setup to train a local planner with reinforcement learning approaches from [stable baselines3](https://github.com/DLR-RM/stable-baselines3.git)
-* Training in simulator [Flatland](https://github.com/avidbots/flatland) in train mode
-* Include realistic behavior patterns and semantic states of obstacles (speaking, running, etc.)
-* Include different obstacles classes (other robots, vehicles, types of persons, etc.)
-* Implementation of intermediate planner classes to combine local DRL planner with global map-based planning of ROS Navigation stack
-* Testing a variety of planners (learning based and model based) within specific scenarios in test mode
-* Modular structure for extension of new functionalities and approaches
-
-# Start Guide
-We recommend starting with the [start guide](https://github.com/ignc-research/arena-rosnav/blob/local_planner_subgoalmode/docs/guide.md) which contains all information you need to know to start off with this project including installation on **Linux and Windows** as well as tutorials to start with. 
-
-* For Mac, please refer to our [Docker](docs/Docker.md).
-
-
-## 1. Installation
+# Installation
 Please refer to [Installation.md](docs/Installation.md) for detailed explanations about the installation process.  
-  If you want to use Docker, please refer to our [Dockerfile](Docker) 
+  
+# Configuration
+Important configuration files for the drl training itself are the following ones in the folder [default_configs](arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/configs/default_agent_configs), those default files contain explanations of the parameters:
 
-## 1.1. Docker
-We provide a Docker file to run our code on other operating systems. Please refer to [Docker.md](docs/Docker.md) for more information.
+- **[settings.yaml](arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/configs/default_agent_configs/settings.yaml)**: contains settings for the training process itself (environmental settings and training hyperparameters)
+- **[global_planner.yaml](arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/configs/default_agent_configs/global_planner.yaml)**: contains settings for the move_base global planner of ROS
+- **[training_curriculum.yaml](arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/configs/default_agent_configs/training_curriculum.yaml)**: contains the settings of the training stages
 
-## 2. Usage
+The configuration for the robot in flatland can be found here::
 
-### DRL Training
+- **[robot configuration](arena-rosnav/simulator_setup/robot/myrobot.model.yaml)**
 
-Please refer to [DRL-Training.md](docs/DRL-Training.md) for detailed explanations about agent, policy and training setups.
+For the evaluation the [run](arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/configs/run_configs/) and [taskmanager](arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/configs/task_manager_node/) configs have to be configured:
 
-### Scenario Creation with the [arena-scenario-gui](https://github.com/ignc-research/arena-scenario-gui/)
-To create complex, collaborative scenarios for training and/or evaluation purposes, please refer to the repo [arena-scenario-gui](https://github.com/ignc-research/arena-scenario-gui/). This application provides you with an user interface to easily create complex scenarios with multiple dynamic and static obstacles by drawing and other simple UI elements like dragging and dropping. This will save you a lot of time in creating complex scenarios for you individual use cases.
+- **[default_run_configs.yaml](arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/configs/run_configs/default_run_configs.yaml)**
 
-# IROS21 information
-To test the code and reproduce the experiments, follow the installation steps in [Installation.md](https://github.com/ignc-research/arena-rosnav/blob/local_planner_subgoalmode/docs/Installation.md). Afterwards, follow the steps in [Evaluations.md](https://github.com/ignc-research/arena-rosnav/blob/local_planner_subgoalmode/docs/Evaluations.md).
+- **[default_task_manager_configs.yaml](arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/configs/task_manager_node/default_task_manager_configs.yaml)**
 
-To test the different **Waypoint Generators**, follow the steps in [waypoint_eval.md](https://github.com/ignc-research/arena-rosnav/blob/local_planner_subgoalmode/docs/eval_28032021.md)
 
-**DRL agents** are located in the [agents folder](https://github.com/ignc-research/arena-rosnav/tree/local_planner_subgoalmode/arena_navigation/arena_local_planner/learning_based/arena_local_planner_drl/agents).
+# Usage
+
+## Commandline Usage
+
+
+## Docker Usage
+A  Docker file is given to start a training as following:
+
+```
+curl -LJO https://raw.githubusercontent.com/AmelusVermin/arena-rosnav/drl_combined_planner_learning/docker/Dockerfile
+docker build -t <docker_name>/ros_training .
+docker run --name train_agent_1 -p 6006:6006 --gpus all amelus/ros_training ./docker/run_training.sh -n 16 -c configs/configs_agent_1/
+``` 
+
+
+
+# Evaluation
+
+## Requirements
+For the evaluation another Python environment with Python 3.7 is necessary.
+
+```
+mkvirtualenv --python=python3.7 rosnav-eval
+workon rosnav-eval
+```
+
+Furthermore, some packages need to be insalled.
+
+```
+pip install 
+```
+
 
 
 # Used third party repos:

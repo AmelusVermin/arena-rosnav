@@ -1,5 +1,6 @@
 # from math import ceil, sqrt
 import math
+import random
 from xmlrpc.client import boolean
 import yaml
 import os
@@ -9,7 +10,7 @@ import rospy
 import tf
 from flatland_msgs.srv import MoveModel, MoveModelRequest, SpawnModelRequest, SpawnModel
 from flatland_msgs.srv import StepWorld
-from geometry_msgs.msg import Pose2D, PoseStamped, PoseWithCovariance
+from geometry_msgs.msg import Pose2D, PoseStamped, PoseWithCovariance, Twist
 from std_msgs.msg import Header
 from nav_msgs.msg import OccupancyGrid, Path, Odometry
 
@@ -57,6 +58,10 @@ class RobotManager:
         self._goal_pub = rospy.Publisher(
             f'{self.ns_prefix}goal', PoseStamped, queue_size=1, latch=True)
 
+        self._twist_pub = rospy.Publisher(
+            f'{self.ns_prefix}cmd_vel', Twist, queue_size=1)
+
+
         self._global_planner = global_planner
         self.update_map(map_)
         self._spawn_robot(robot_yaml_path)
@@ -70,6 +75,7 @@ class RobotManager:
         # a condition variable used for
         self._global_path_con = threading.Condition()
         self._static_obstacle_name_list = []
+        self._curr_goal = None
 
     def _spawn_robot(self, robot_yaml_path: str):
         request = SpawnModelRequest()
@@ -128,6 +134,10 @@ class RobotManager:
             #     \n\tcurrent step_size:\t {self.step_size}\n\tcurrent laser's update rate:\t {self.LASER_UPDATE_RATE} "
             for _ in range(math.ceil(1/(self.step_size*self.LASER_UPDATE_RATE))):
                 self._step_world()
+    
+    def reset_cmd_vel(self):
+        msg = Twist()
+        self._twist_pub.publish(msg)
 
     def set_start_pos_random(self):
         start_pos = Pose2D()
@@ -136,7 +146,7 @@ class RobotManager:
         self.move_robot(start_pos)
 
     def set_start_pos_goal_pos(self, start_pos: Union[Pose2D, None]
-                               = None, goal_pos: Union[Pose2D, None] = None, min_dist=1):
+                               = None, goal_pos: Union[Pose2D, None] = None, min_dist=1, seed=None):
         """set up start position and the goal postion. Path validation checking will be conducted. If it failed, an
         exception will be raised.
 
@@ -147,7 +157,8 @@ class RobotManager:
         Exception:
             Exception("can not generate a path with the given start position and the goal position of the robot")
         """
-
+        if seed is not None:
+            random.seed(seed)
         def dist(x1, y1, x2, y2):
             return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
@@ -200,8 +211,10 @@ class RobotManager:
                     continue
 
             # move the robot to the start pos
+            self.reset_cmd_vel()
             self.move_robot(start_pos_)
 
+            self._curr_goal = goal_pos_
             try:
                 # publish the goal, if the gobal plath planner can't generate a path, a, exception will be raised.
                 self.publish_goal(goal_pos_.x, goal_pos_.y, goal_pos_.theta)

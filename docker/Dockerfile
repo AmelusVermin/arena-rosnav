@@ -87,7 +87,6 @@ RUN pip3 install --extra-index-url https://rospypi.github.io/simple/ rospy rosba
         rospkg \
         scikit-learn \
         seaborn \
-        pandas \
         catkin_pkg \ 
         netifaces \ 
         pathlib \
@@ -132,3 +131,4 @@ RUN echo $'export PYTHONPATH=/catkin_ws/src/arena-rosnav:${PYTHONPATH}\n' >> /ro
 RUN echo $'source /catkin_ws/devel/setup.bash\n' >> /root/.bashrc
 
 WORKDIR /catkin_ws/src/arena-rosnav/
+COPY . .

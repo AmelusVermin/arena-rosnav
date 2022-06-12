@@ -42,6 +42,10 @@ def get_run_configs(config_path: str):
     args = add_yaml_config(args, config_path)
     return args
 
+def get_taks_manager_config(config_path: str):
+    args = argparse.Namespace()
+    args = add_yaml_config(args, config_path)
+    return args
 
 def _add_robot_config(args):
     """parses robot related config file from simulator setup package and adds important ones to the given args"""

@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-
-from distutils.command.config import config
-from random import seed
 import rospy
 import time
 import os
@@ -9,10 +6,10 @@ import rospkg
 import sys
 import subprocess
 import signal
+
 from pydoc import locate
 from stable_baselines.common.vec_env import SubprocVecEnv, DummyVecEnv, VecNormalize
 from stable_baselines.ppo2 import PPO2
-
 from distutils.dir_util import copy_tree
 from utils.startup_utils import load_vec_normalize
 from utils.multi_threading_utils import set_pdeathsig
@@ -136,7 +133,7 @@ if __name__ == '__main__':
     # stop training on reward threshold callback
     stoptraining_cb = StopTrainingOnRewardThreshold(
         treshhold_type=args.stop_threshhold_type, 
-        threshold=args.stop_reward_threshhold, 
+        threshold=args.stop_threshhold, 
         verbose=args.stop_verbose
     )
     rospy.loginfo("create train stage callback")

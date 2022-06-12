@@ -1,0 +1,17 @@
+<launch>
+    <arg name="config" default="configs/task_manager_node/default_task_manager_configs.yaml" />
+    <arg name="ns" default="" />
+    <arg name="max_episodes" default="1000" />
+    <arg name="auto_reset" default="true" />
+    <arg name="delta" default="1.0"/>
+    <arg name="timeout" default="2.0"/>     <!--  ************** minute  ***************  -->
+    <!--  ************** task generator  ***************  -->
+    <node pkg="arena_combined_planner_drl" name="task_manager_node" type="task_manager_node.py" output="screen">
+        <param name="config" value="$(arg config)" />
+        <param name="ns" value="$(arg ns)" />
+        <param name="max_episodes" value="$(arg max_episodes)"/>
+        <param name="auto_reset" value="$(arg auto_reset )" />
+        <param name="delta" value="$(arg delta)"/>
+        <param name="timeout" value="$(arg timeout)"/>
+    </node>
+</launch>

@@ -1,6 +1,5 @@
 import numpy as np
 import scipy.spatial
-from arena_navigation.arena_local_planner.learning_based.arena_local_planner_drl.rl_agent.utils import reward
 from geometry_msgs.msg import Pose2D
 from typing import Tuple
 from collections import deque
@@ -14,7 +13,6 @@ class RewardCalculator:
         goal_radius: float,
         collision_tolerance: float,
         rule: str = "rule_00",
-        extended_eval: bool = False,
         max_timesteps: int = 500
     ):
         """
@@ -38,7 +36,6 @@ class RewardCalculator:
         self.last_global_plan = None
         self.safe_dist = safe_dist
         self.collision_tolerance = collision_tolerance
-        self._extended_eval = extended_eval
         self._max_timesteps = max_timesteps
         self._prior_path_lengths = deque(maxlen=20)
 

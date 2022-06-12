@@ -21,14 +21,15 @@ class MapGenerator:
         # initialize occupancy grid
         self.occupancy_grid = OccupancyGrid()
         self.ns = rospy.get_param("~ns")
+        self.ns_prefix = "" if (self.ns == "" or self.ns is None) else f"/{self.ns}"
         
         self.indoor_prob = rospy.get_param("~indoor_prob")
         
         # self.generate_initial_map() # initial random map generation (before first episode)
-        rospy.Subscriber("/" + self.ns + '/map', OccupancyGrid, self.get_occupancy_grid)
+        rospy.Subscriber(self.ns_prefix + '/map', OccupancyGrid, self.get_occupancy_grid)
         # generate new random map for the next episode when entering new episode
-        rospy.Service("/" + self.ns + '/new_map', GetMapWithSeed, self.new_episode_callback)
-        self.mappub = rospy.Publisher("/" + self.ns + '/map', OccupancyGrid, queue_size=1)
+        rospy.Service(self.ns_prefix + '/new_map', GetMapWithSeed, self.new_episode_callback)
+        self.mappub = rospy.Publisher(self.ns_prefix + '/map', OccupancyGrid, queue_size=1)
 
         # initialize yaml files
         map_dir = os.path.join(rospkg.RosPack().get_path('simulator_setup'), 'maps')
@@ -91,6 +92,7 @@ class MapGenerator:
     #         rospy.loginfo("New random map published.")
 
     def new_episode_callback(self, request: GetMapWithSeedRequest):
+        print("generate new map")
         seed = request.seed
         self._update_params()
         occ_grid = self.occupancy_grid
@@ -105,6 +107,9 @@ class MapGenerator:
 
     def _update_params(self):
         # general map parameter
+        pars = rospy.get_param_names()
+
+        print(pars)
         self.height = rospy.get_param("~height")
         self.width = rospy.get_param("~width")
         self.resolution = rospy.get_param("~resolution")

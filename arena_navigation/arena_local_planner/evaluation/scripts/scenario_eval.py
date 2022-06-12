@@ -1,4 +1,5 @@
 # for data
+from cProfile import label
 import sys
 import copy
 import pprint as pp
@@ -14,7 +15,8 @@ import matplotlib.pylab as pl
 from matplotlib.lines import Line2D
 from matplotlib.pyplot import figure
 from matplotlib.patches import Polygon
-from matplotlib._png import read_png
+#from matplotlib._png import read_png
+import matplotlib.image as mpimg
 import matplotlib.cm as cm
 # calc
 import numpy as np
@@ -22,6 +24,7 @@ import math
 from visualization_msgs.msg import Marker, MarkerArray
 import pathlib
 import os
+from scipy import ndimage
 # from sklearn.cluster import AgglomerativeClustering
 # gplan
 import gplan_analysis as gplan
@@ -39,10 +42,10 @@ class newBag():
         self.csv_dir         = bag_name.replace(".bag","")
         # bag topics
         self.odom_topic      = "/sensorsim/police/odom"
-        self.collision_topic = "/police/collision"
-        self.subgoal_topic   = "/police/subgoal"
-        self.gp_topic        = "/police/gplan"
-        self.wpg_topic       = "/police/subgoal_wpg"
+        self.collision_topic = "/sensorsim/police/collision"
+        self.subgoal_topic   = "/sensorsim/police/subgoal"
+        self.gp_topic        = "/sensorsim/police/gplan"
+        self.wpg_topic       = "/sensorsim/police/subgoal_wpg"
         self.topic_sm      = "/flatland_server/debug/layer/static"
         # global apth
         self.plot_gp = True
@@ -154,7 +157,7 @@ class newBag():
             # check if collision was published
             collision_csv = self.bag.message_by_topic(self.collision_topic)
             df_collision  = pd.read_csv(collision_csv, error_bad_lines=False)
-
+            
             #check if subgoals in bag
             subg_csv = self.bag.message_by_topic(self.subgoal_topic)
             df_subg  = pd.read_csv(subg_csv, error_bad_lines=False)
@@ -375,7 +378,8 @@ class newBag():
                 all_cols_y.append(col_xy[1])
 
                 if plt_cfg["plot_collisions"]:
-                    circle = plt.Circle((-col_xy[1], col_xy[0]), 0.3, color=clr, fill = True, alpha = 0.6)
+                    coll = transform_point([col_xy[0], col_xy[1]])
+                    circle = plt.Circle(coll, 0.8, color=clr, fill = True, alpha = 0.6)
                     ax.add_patch(circle)
                     
                 col_exists = True
@@ -389,8 +393,6 @@ class newBag():
             n = 50
             colors  = plt.cm.jet(np.linspace(0,1,n))
             vel_map = np.linspace(0,0.5,n)
-            
-            print(vels)
 
             idx = 0
             joined = 0
@@ -439,17 +441,29 @@ class newBag():
         json_data['velocity']  = []
         json_data['collision'] = []
 
-
+        i = 0
         for run in bags:
-            if True:#run == "run_5":
-                pose_x = bags[run][0]
-                pose_y = bags[run][1]
-                sg_x   = bags[run][4]
-                sg_y   = bags[run][5]
-                wp_x   = bags[run][6]
-                wp_y   = bags[run][7]
-                vels   = bags[run][8]
+            if i < 3 and i >= 3 + 5:
+                i += 1
+                continue
+            i += 1
 
+            vels   = bags[run][8]
+
+            start_idx = 0
+            for v in vels:
+                if v != 0: break
+                start_idx += 1
+
+            if True:#run == "run_5":
+                pose_x = bags[run][0][start_idx:]
+                pose_y = bags[run][1][start_idx:]
+                t      = bags[run][2][start_idx:]
+                sg_x   = bags[run][4][start_idx:]
+                sg_y   = bags[run][5][start_idx:]
+                wp_x   = bags[run][6][start_idx:]
+                wp_y   = bags[run][7][start_idx:]
+                vels   = bags[run][8][start_idx:]
 
                 x    =  np.array(pose_x)
                 y    = np.array(pose_y)
@@ -473,7 +487,7 @@ class newBag():
                 if max(pose_y) > axlim["y_max"]:
                     axlim["y_max"] = max(pose_y)
                 
-                t = bags[run][2]
+                
 
                 dist_array = (x[:-1]-x[1:])**2 + (y[:-1]-y[1:])**2
                 path_length = np.sum(np.sqrt(dist_array)) 
@@ -484,7 +498,15 @@ class newBag():
                     # print(lgnd)
 
                     # ax.plot(y, x, line_clr, linestyle = line_stl, alpha=0.5)
-                    ax.plot(x, y, line_clr, linestyle = line_stl, alpha=0.5)
+                    x_conv = []
+                    y_conv = []
+                    for x,y in zip(x,y):
+                        xy = transform_point([x,y])
+                        x_conv.append(xy[0])
+                        y_conv.append(xy[1])
+
+
+                    ax.plot(x_conv, y_conv, line_clr, linestyle = line_stl, alpha=0.5)
 
                     ax.set_xlabel("x in [m]")
                     ax.set_ylabel("y in [m]")
@@ -507,7 +529,7 @@ class newBag():
                 # for av
                 
 
-                n_col = len(bags[run][3])
+                n_col = len(bags[run][3][start_idx:])
 
                 duration    = round(duration,3)
                 path_length = round(path_length,3)
@@ -524,7 +546,7 @@ class newBag():
                 # append current run to txt
                 # self.make_txt(file_name, "\n"+cr) -- txt
 
-                col_xy.append(bags[run][3])
+                col_xy.append(bags[run][3][start_idx:])
 
                 # prepare dict for json
                 json_data['run'].append(run)
@@ -543,6 +565,7 @@ class newBag():
         msg_col     = "\ntotal number of collisions: " + str(self.nc_total)+"\n"
 
         print("----------------------   "+planner+"   ----------------------")
+        print(f"num runs: {durations}")
         print("average time:        ", round(self.average(durations),3), "s")
         print("average path length: ", round(self.average(trajs),3), "m")
         print("average velocity:    ", round(self.average(av_vels),3), " m/s")
@@ -795,6 +818,8 @@ class newBag():
         #         circle = plt.Circle((i[0], i[1]), radius, color=clr, fill = False, alpha = 1, lw = 2)
         #         ax.add_patch(circle)
 
+
+
 def fancy_print(msg,success):
     if success:
         cprint(msg + " "u'\N{check mark}', "green")
@@ -804,7 +829,7 @@ def fancy_print(msg,success):
 def plot_arrow(start,end):
     global ax
     # ax.arrow(-start[1], start[0], -end[1], end[0], head_width=0.05, head_length=0.1, fc='k', ec='k')
-    plt.arrow(start[0], start[1], end[0], end[1],  
+    plt.arrow(start[0], start[1], end[0] - start[0], end[1] - start[1],  
         head_width = 0.2, 
         width = 0, 
         ec = "black",
@@ -814,8 +839,23 @@ def plot_arrow(start,end):
 def plot_dyn_obst(ob_xy):
     global ax
 
-    circle = plt.Circle((ob_xy[0], ob_xy[1]), 0.3, color="black", fill = False, alpha = 1)
+    circle = plt.Circle((ob_xy[0], ob_xy[1]), 0.7, color="black", fill = False, alpha = 1)
     ax.add_patch(circle)
+
+def rotate(p, degrees=0, origin=[50,50]):
+    angle = np.deg2rad(degrees)
+    R = np.array([[np.cos(angle), -np.sin(angle)],
+                  [np.sin(angle),  np.cos(angle)]])
+    o = np.atleast_2d(origin)
+    p = np.atleast_2d(p)
+    return np.squeeze((R @ (p.T-o.T) + o.T).T)
+
+def transform_point(p):
+    global resolution_factor
+    p_scaled = np.array(p)/resolution_factor
+    p_flipped = np.flipud(p_scaled)
+    return rotate(p_flipped, 180)
+
 
 def read_scn_file(map, ob):
     # gets start / goal of each scenario as global param
@@ -835,13 +875,15 @@ def read_scn_file(map, ob):
             jf = file
     # read file
     with open(json_path+"/"+jf, 'r') as myfile:
+        #print(myfile)
         data=myfile.read()
-    obj = json.loads(data)
-
+    data = json.loads(data)
+    #print(obj)
     # json to dict
-    for i in obj:
-        for l in obj[i]:
-            data = l
+    #for i in obj:
+    #    for l in obj[i]:
+    #        print(l)
+    #        data = l
     
     # get json data
     # for do in data["dynamic_obstacles"]:
@@ -862,33 +904,51 @@ def read_scn_file(map, ob):
     #         plot_dyn_obst(ep)
     #         plot_arrow(sp,wp)
 
-    for do in data["pedsim_agents"]:
-            sp   = data["pedsim_agents"][do]["pos"]
-            wp_x = []
-            wp_y = []
-            wp = []
-            for i in range(len(data["pedsim_agents"][do]["waypoints"])):
-                wp_x[i] = data["pedsim_agents"][do]["waypoints"][i][0]
-                wp_y[i] = data["pedsim_agents"][do]["waypoints"][i][1]
-                wp[i]   = [wp_x[i], wp_y[i]]
-                if plt_cfg["plot_obst"]:
-                    if range(len(do["waypoints"])) > 1:
-                        plot_dyn_obst(sp)
-                        plot_arrow[sp, wp[0]]
-                        plot_arrow(wp[i],wp[i+1])
-                    else: 
-                        plot_dyn_obst(sp)
-                        plot_arrow(sp,wp[i])
+    global ax, legend_elements, resolution_factor
+    
+    img = np.array(mpimg.imread(os.path.join("../../../../simulator_setup/maps/", map, "map.png")))
+    img = ndimage.rotate(img, 90)
+    ax.imshow(img)
 
+    goal = transform_point(data["robot_goal"])
+    start = transform_point(data["robot_position"])
+    
+    goal = ax.scatter([goal[0]], [goal[1]], marker="*", color="brown", s=100, label="goal")
+    start = ax.scatter([start[0]], [start[1]], marker="^", color="brown", s=100, label="start")
+
+    legend_elements.append(start)
+    legend_elements.append(goal)
+    
+
+    #print(data)
+    for ped_agent in data["pedsim_agents"]:
+        sp = transform_point(ped_agent["pos"])
+        # sp_conv = np.array(ped_agent["pos"])/resolution_factor
+        # sp = np.flipud(sp_conv)
+        # sp = rotate(sp_conv, 90)
         
+        #sp = np.array([sp[1], sp[0]])
+        wps = np.array([transform_point(wp) for wp in ped_agent["waypoints"]])
+        # wps_conv = np.array(ped_agent["waypoints"])/resolution_factor
+        # wps = np.array([np.flipud(wp) for wp in wps_conv])
+        # wps = np.array([rotate(wp, 90) for wp in wps_conv])
+
+        if plt_cfg["plot_obst"]:
+            plot_dyn_obst(sp)
+            last_wp = sp
+            for wp in wps:
+                plot_arrow(last_wp, wp)
+                last_wp = wp
+
     # start = data["robot"]["start_pos"]
     # goal  = data["robot"]["goal_pos"]
 
     start = data["robot_position"]
     goal  = data["robot_goal"]
 
+
 def eval_cfg(cfg_file, filetype):
-    global ax, plot_sm, start, goal, axlim, plt_cfg, line_clr, line_stl
+    global ax, plot_sm, start, goal, axlim, plt_cfg, line_clr, line_stl, legend_elements
 
     cur_path    = str(pathlib.Path().absolute()) 
     parent_path = str(os.path.abspath(os.path.join(cur_path, os.pardir)))
@@ -923,7 +983,7 @@ def eval_cfg(cfg_file, filetype):
         
         elif "default" not in curr_figure and not plot_file_exists:
             fig, ax  = plt.subplots(figsize=(6, 7))
-
+            legend_elements = []
             ca = curr_figure.split("_")
             map  = ca[0]
             ob   = ca[1]
@@ -932,7 +992,7 @@ def eval_cfg(cfg_file, filetype):
             mode =  map + "_" + ob + "_" + vel 
             fig.canvas.set_window_title(curr_figure)
 
-            legend_elements = []
+            
             if plt_cfg["plot_gp"]:
                 gp_el = Line2D([0], [0], color="tab:cyan", lw=4, label="Global Plan")
                 legend_elements.append(gp_el)
@@ -981,15 +1041,15 @@ def eval_cfg(cfg_file, filetype):
                                  ob  in file and \
                                  vel in file and \
                                  wpg in file
-
+                    print(file)
                     if file.endswith(".bag") and file_match:
-
+                        
                         fancy_print("Evaluate bag: " + file, 0)
                         planner_wpg = planner.split("_")[0] + "wpg" + wpg 
                         newBag(planner_wpg, curr_figure, curr_bag + "/" + file)
                         fancy_print("Evaluate bag: " + file, 1)
 
-            
+            print(legend_elements)
             #map0: lower left, empty: upper left, open: lower left
             ax.legend(handles=legend_elements, loc="lower left")
 
@@ -1032,6 +1092,8 @@ def getMap(msg):
 def run(cfg_file, filetype):
     global ax, sm, grid_step, select_run
     global plt_cfg
+    global resolution_factor
+    resolution_factor = 0.25
     plt_cfg = {}
 
     select_run = []

@@ -1,0 +1,140 @@
+# Training Curriculum 
+# this yaml serves as container of the learning curriculum for the agent
+# by determining the number of static/dynamic obstacles per stage
+# (will carry on training on last stage when threshhold reached)
+
+# 1:                                          # number of stage
+#   static: 0                                 # number of static obstacles (unkown by global planner) 
+#   dynamic: 0                                # number of dynamic obstacles
+#   map_type: "outdoor"                       # map type can be "outdoor", "indoor" or "mixed"
+#   map_height: 100                           # map height in cells
+#   map_width: 100                            # map width in cells
+#   map_resolution: 0.11                      # resolution (length if cells in m)
+#   indoor_prob: 0.5                          # if map type is "mixes" probability of choosing "indoor"
+#   indoor_corridor_radius: 8                 # radius of corridors in indoor maps
+#   indoor_iterations: 50                     # number of iterations for generating indoor maps
+#   indoor_room_number: 3                     # number of rooms in indoor maps
+#   indoor_room_width: 45                     # width of indoor rooms
+#   indoor_room_height: 50                    # height of indoor rooms
+#   indoor_room_no_overlap: True              # if rooms are allowed to overlap
+#   outdoor_obstacle_number: 0                # number of static obstacles in outdoor maps (known by global planner)
+#   outdoor_obstacle_extra_radius: 10         # radius of static (known) obstacles in outdoor maps
+
+1:
+  static: 0
+  dynamic: 0
+  map_type: "outdoor"
+  map_height: 100
+  map_width: 100
+  map_resolution: 0.11
+  indoor_prob: 0.5
+  indoor_corridor_radius: 8
+  indoor_iterations: 50
+  indoor_room_number: 3
+  indoor_room_width: 45
+  indoor_room_height: 50
+  indoor_room_no_overlap: True
+  outdoor_obstacle_number: 0
+  outdoor_obstacle_extra_radius: 10
+
+2:
+  static: 0
+  dynamic: 0
+  map_type: "mixed"
+  map_height: 150
+  map_width: 150
+  map_resolution: 0.11
+  indoor_prob: 0.5
+  indoor_corridor_radius: 9
+  indoor_iterations: 50
+  indoor_room_number: 3
+  indoor_room_width: 43
+  indoor_room_height: 48
+  indoor_room_no_overlap: True
+  outdoor_obstacle_number: 14
+  outdoor_obstacle_extra_radius: 7
+
+3:
+  static: 18
+  dynamic: 0
+  map_type: "outdoor"
+  map_height: 200
+  map_width: 200
+  map_resolution: 0.11
+  indoor_prob: 0.5
+  indoor_corridor_radius: 8
+  indoor_iterations: 50
+  indoor_room_number: 3
+  indoor_room_width: 45
+  indoor_room_height: 50
+  indoor_room_no_overlap: True
+  outdoor_obstacle_number: 14
+  outdoor_obstacle_extra_radius: 8
+
+4:
+  static: 11
+  dynamic: 0
+  map_type: "indoor"
+  map_height: 200
+  map_width: 200
+  map_resolution: 0.11
+  indoor_prob: 0.5
+  indoor_corridor_radius: 10
+  indoor_iterations: 50
+  indoor_room_number: 5
+  indoor_room_width: 43
+  indoor_room_height: 48
+  indoor_room_no_overlap: True
+  outdoor_obstacle_number: 14
+  outdoor_obstacle_extra_radius: 10
+
+5:
+  static: 10
+  dynamic: 14
+  map_type: "outdoor"
+  map_height: 200
+  map_width: 200
+  map_resolution: 0.11
+  indoor_prob: 0.5
+  indoor_corridor_radius: 15
+  indoor_iterations: 50
+  indoor_room_number: 3
+  indoor_room_width: 45
+  indoor_room_height: 50
+  indoor_room_no_overlap: True
+  outdoor_obstacle_number: 18
+  outdoor_obstacle_extra_radius: 10
+
+6:
+  static: 6
+  dynamic: 12
+  map_type: "indoor"
+  map_height: 200
+  map_width: 200
+  map_resolution: 0.11
+  indoor_prob: 0.5
+  indoor_corridor_radius: 10
+  indoor_iterations: 50
+  indoor_room_number: 8
+  indoor_room_width: 43
+  indoor_room_height: 48
+  indoor_room_no_overlap: True
+  outdoor_obstacle_number: 15
+  outdoor_obstacle_extra_radius: 10
+
+7:
+  static: 12
+  dynamic: 19
+  map_type: "outdoor"
+  map_height: 200
+  map_width: 200
+  map_resolution: 0.11
+  indoor_prob: 0.5
+  indoor_corridor_radius: 12
+  indoor_iterations: 50
+  indoor_room_number: 9
+  indoor_room_width: 45
+  indoor_room_height: 50
+  indoor_room_no_overlap: True
+  outdoor_obstacle_number: 13
+  outdoor_obstacle_extra_radius: 9

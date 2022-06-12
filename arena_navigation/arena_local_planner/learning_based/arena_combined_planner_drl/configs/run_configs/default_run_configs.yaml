@@ -1,0 +1,22 @@
+
+# enabels determinism 
+deterministic: False
+# number of waypoints used as input for observation space: "BASE_SUB_POINTS" and "BASE_NON_POINTS"
+num_global_plan_points: 50
+# every xth point in global plan is used as waypoints
+gp_point_skip_rate: 4
+# max distance to goal used for observation space declartion in gym
+max_distance_goal: 400
+# parameters for synchronizing odoms and scans
+max_deque_size: 10
+sync_slop: 0.05
+use_first_synced_obs: True
+# radius of goals
+goal_radius: 0.3075
+# determines used observation space: available "BASE_SUB_LENGTH" (goal, subgoal, global plan length, scan), "BASE_SUB_POINTS" (goal, subgoal, global plan path, scan), "BASE_NON_NON" (goal, scan), 
+#  "BASE_SUB_NON" (goal, subgoal, scan), "BASE_NON_LENGTH" (goal, global plan length, scan), "BASE_NON_POINTS"
+observation_space_type: "BASE_SUB_POINTS"
+# path to model zip
+model_path: "models/trained/agent_1/best_model/best_model.zip"
+# path to normalization pickle file
+vec_norm_path: "models/trained/agent_1/best_model/vec_normalize.pkl"

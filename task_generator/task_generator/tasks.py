@@ -20,7 +20,7 @@ from .obstacles_manager import ObstaclesManager
 from .robot_manager import RobotManager
 from pathlib import Path
 
-
+import random
 from typing import List
 from std_srvs.srv import Trigger
 from pedsim_srvs.srv import SpawnPeds
@@ -32,6 +32,7 @@ from pedsim_msgs.msg import LineObstacles
 from pedsim_msgs.msg import LineObstacle
 import time
 import sys
+from std_srvs.srv import Empty
 
 arena_tools_path = (
     Path(__file__).parent / ".." / ".." / ".." / "forks" / "arena-tools"
@@ -56,7 +57,7 @@ class ABSTask(ABC):
         self._map_lock = Lock()
         rospy.Subscriber("/map", OccupancyGrid, self._update_map)
         # a mutex keep the map is not unchanged during reset task.
-
+        
     @abstractmethod
     def reset(self):
         """
@@ -67,6 +68,10 @@ class ABSTask(ABC):
         with self._map_lock:
             self.obstacles_manager.update_map(map_)
             self.robot_manager.update_map(map_)
+    
+    def _agent_callback(self, msg):
+        self._is_agent_ready = True
+        self._resume_sim()
 
 
 class RandomTask(ABSTask):
@@ -78,8 +83,10 @@ class RandomTask(ABSTask):
         super().__init__(obstacles_manager, robot_manager)
         self._min_dist = min_dist
 
-    def reset(self):
+    def reset(self, seed = None):
         """[summary]"""
+        if seed is not None:
+            random.seed(seed)
         with self._map_lock:
             max_fail_times = 3
             fail_times = 0
@@ -103,7 +110,7 @@ class RandomTask(ABSTask):
                     (
                         start_pos,
                         goal_pos,
-                    ) = self.robot_manager.set_start_pos_goal_pos(min_dist=self._min_dist)
+                    ) = self.robot_manager.set_start_pos_goal_pos(min_dist=self._min_dist, seed=seed)
                     break
                 except rospy.ServiceException as e:
                     # reset map to original one to clean the objects of last iteration
@@ -352,6 +359,7 @@ class ScenerioTask(ABSTask):
             self._num_repeats_curr_scene += 1
             info["num_repeats_curr_scene"] = self._num_repeats_curr_scene
             info["max_repeats_curr_scene"] = self._max_repeats_curr_scene
+      
         return info
 
     def _set_new_scenerio(self):
@@ -607,7 +615,7 @@ class ScenarioTask(ABSTask):
             self.pedsim_manager = PedsimManager()
             peds = [agent.getPedMsg() for agent in self.scenario.pedsimAgents]
             self.pedsim_manager.spawnPeds(peds)
-
+            
         # setup static flatland obstacles
         for obstacle in self.scenario.staticObstacles:
             self.obstacles_manager._srv_spawn_model.call(
@@ -619,9 +627,11 @@ class ScenarioTask(ABSTask):
 
         self.reset_count = 0
 
-    def reset(self):
+    def reset(self, seed=None):
         self.reset_count += 1
         info = {}
+        if seed is not None:
+            random.seed(seed)
         with self._map_lock:
             # reset pedsim agents
             if self.pedsim_manager != None:
@@ -638,7 +648,7 @@ class ScenarioTask(ABSTask):
                     self.scenario.robotGoal[0], self.scenario.robotGoal[1], 0
                 ),
             )
-
+            
             # fill info dict
             if self.reset_count == 1:
                 info["new_scenerio_loaded"] = True
@@ -649,6 +659,7 @@ class ScenarioTask(ABSTask):
             info[
                 "max_repeats_curr_scene"
             ] = 1000  # todo: implement max number of repeats for scenario
+            
         return info
 
 
@@ -664,7 +675,7 @@ def get_scenario_file_format(path: str):
 
 
 def get_predefined_task(
-    ns: str, mode="random", start_stage: int = 1, min_dist: float = 1, PATHS: dict = None, global_planner = None
+    ns: str, mode="random", start_stage: int = 1, num_obstacles=20, num_dyn_obstacles=20, num_stat_obstacles=10, min_dist: float = 1, PATHS: dict = None, global_planner = None
 ):
 
     # TODO extend get_predefined_task(mode="string") such that user can choose between task, if mode is
@@ -702,14 +713,20 @@ def get_predefined_task(
     # TODO In the future more Task will be supported and the code unrelated to
     # Tasks will be moved to other classes or functions.
     task = None
-    if mode == "random":
+    if mode == "random_fixed":
         rospy.set_param("/task_mode", "random")
-        obstacles_manager.register_random_obstacles(20, 0.4)
+        obstacles_manager.register_random_obstacles(num_dyn_obstacles, 1.0)
+        obstacles_manager.register_random_obstacles(num_stat_obstacles, 0.0)
+        task = RandomTask(obstacles_manager, robot_manager, min_dist=min_dist)
+        print("random tasks requested")
+    if mode == "random":
+        rospy.set_param("/task_mode", "manual")
+        obstacles_manager.register_random_obstacles(num_obstacles, 0.4)
         task = RandomTask(obstacles_manager, robot_manager, min_dist=min_dist)
         print("random tasks requested")
     if mode == "manual":
         rospy.set_param("/task_mode", "manual")
-        obstacles_manager.register_random_obstacles(20, 0.4)
+        obstacles_manager.register_random_obstacles(num_obstacles, 0.4)
         task = ManualTask(ns, obstacles_manager, robot_manager)
         print("manual tasks requested")
     if mode == "staged":

@@ -5,7 +5,6 @@
   <param name="train_mode" value="$(arg train_mode)" />
   <arg name="use_recorder"       default="false"/>
   <arg name="record_only_planner"       default="true"/>
-  
   <arg name="local_planner"   default="global_planner"/>
   <arg name="waypoint_generator"   default="classic"/>
   <arg name="rviz_file"       default="nav"/>
@@ -30,11 +29,12 @@
 
   <!-- the folder name under the path simulator_setup/maps  -->
   <arg name="map_file"        default="map_empty"/>
+  <arg name="task_file"       default="default_task_manager_configs"/>
   <!-- <arg name="map_folder_name" default="map_empty" /> -->
   <arg name="map_path" default="$(find simulator_setup)/maps/$(arg map_file)/map.yaml" />
   <param name="flatland_server/world_path" value="$(find simulator_setup)/maps/$(arg map_file)/map.world.yaml" />
-  <param name="map_layer_path" value="$(find simulator_setup)/maps/$(arg map_file)/map_layer.yaml" />
-  <param name="map_file" value="$(arg map_file)" />  
+  <param name="flatland_server/map_layer_path" value="$(find simulator_setup)/maps/$(arg map_file)/map_layer.yaml" />
+  <param name="flatland_server/map_file" value="$(arg map_file)" />  
 
   <!-- the velocity of randomly genelized obstacles  -->
   <arg name="obs_vel" default="0.3" />
@@ -58,11 +58,12 @@
   <!-- <remap from="move_base_simple/goal" to="/goal"/> -->
   <!-- data recorder -->
   <group if="$(eval arg('use_recorder') == true)">
-    <node pkg="arena_evaluation" name="data_recorder_node" type="data_recorder_node.py" />
-      <param name="local_planner"  value="$(arg local_planner)"/>
-      <param name="waypoint_generator"  value="$(arg waypoint_generator)"/>
-      <param name="record_only_planner"  value="$(arg record_only_planner)"/>
-      <param name="scenario_file"  value="$(arg scenario_file)"/>
+    <include file="$(find arena_bringup)/launch/sublaunch_testing/data_recorder.launch">
+      <arg name="local_planner"  value="$(arg local_planner)"/>
+      <arg name="waypoint_generator"  value="$(arg waypoint_generator)"/>
+      <arg name="record_only_planner"  value="$(arg record_only_planner)"/>
+      <arg name="scenario_file"  value="$(arg scenario_file)"/>
+    </include>
   </group>
 
  <!-- use simulator-->
@@ -126,6 +127,7 @@
    <arg name="auto_reset"           value="$(arg reset)"/>
    <arg name="timeout"              value="$(arg timeout)"/>
   </include>
+
   <!-- <include file="$(find arena_bringup)/launch/sublaunch_testing/intermediate_planner.launch">
 
   </include>  -->
@@ -151,7 +153,7 @@
   </node>
 
   <!-- launch map generator if training with random map-->
-  <group if="$(eval arg('map_file') == 'random_map')">
+  <!-- <group if="$(eval arg('map_file') == 'random_map')">
     <node pkg="simulator_setup" name="map_generator_node" type="map_generator_node.py" />
-  </group>
+  </group> -->
 </launch>

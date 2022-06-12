@@ -1,0 +1,11 @@
+deterministic: False
+num_global_plan_points: 50
+gp_point_skip_rate: 4
+max_distance_goal: 400
+max_deque_size: 10
+sync_slop: 0.05
+use_first_synced_obs: False
+goal_radius: 0.3075
+observation_space_type: "BASE_SUB_NON"
+model_path: "models/trained/agent_4/best_model/best_model.zip"
+vec_norm_path: "models/trained/agent_4/best_model/vec_normalize.pkl"

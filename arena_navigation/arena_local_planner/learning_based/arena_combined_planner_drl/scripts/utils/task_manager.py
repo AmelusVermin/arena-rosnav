@@ -32,9 +32,10 @@ class TaskManager:
         else:
             self.task = self._get_random_task(paths, start_stage)
             self._request_new_map = rospy.ServiceProxy("/" + self.ns + "/new_map", GetMapWithSeed, persistent=True)
-            #self._request_new_map.queue_size = 1
+
 
     def reset(self, seed, new_map=True):
+        """ reset task and map """
         done = False
         attempts = 10
         while(not done):
@@ -54,12 +55,15 @@ class TaskManager:
 
 
     def _get_random_task(self, paths: dict, start_stage):
+        """ prepare taskmanager """
+        # load stage config
         config_path = paths['curriculum']
         with open(config_path, 'r') as params_json:
             map_params = yaml.safe_load(params_json)
 
         assert map_params is not None, "Error: training curriculum file cannot be found!"
-
+        
+        # get some params
         numb_static_obst = map_params[start_stage]['static']
         numb_dyn_obst = map_params[start_stage]['dynamic']
         map_type = map_params[start_stage]['map_type']
@@ -68,8 +72,8 @@ class TaskManager:
         else:
             indoor_prob = 0
 
+        #prepare map generator and service
         self._start_map_generator_node(map_type, indoor_prob)
-
         service_client_get_map = rospy.ServiceProxy('/' + self.ns + '/static_map', GetMap)
 
         service_name = '/' + self.ns + '/static_map'
@@ -81,6 +85,7 @@ class TaskManager:
             else:
                 time.sleep(1)
 
+        # crate Robot manager and Obstacle manager
         map_response = service_client_get_map()
         models_folder_path = rospkg.RosPack().get_path('simulator_setup')
         self.robot_manager = RobotManager(self.ns, map_response.map, os.path.join(
@@ -96,6 +101,7 @@ class TaskManager:
         return StagedRandomTask(self.ns, self.obstacles_manager, self.robot_manager, start_stage, self.min_dist, self.paths)
 
     def _start_map_generator_node(self, map_type: str, indoor_prob: float):
+        """ start map generator node """
         package = 'simulator_setup'
         launch_file = 'map_generator.launch'
         arg1 = "ns:=" + self.ns
@@ -106,6 +112,7 @@ class TaskManager:
         self._global_planner_process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, preexec_fn=set_pdeathsig(signal.SIGTERM))
 
     def _update_map_parameters(self, curr_stage):
+        """ update map generator parameters """
         config_path = self.paths['curriculum']
         with open(config_path, 'r') as params_json:
             map_params = yaml.safe_load(params_json)

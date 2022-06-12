@@ -1,15 +1,12 @@
 import numpy as np
-from numpy.core.numeric import indices
 import rospy
 import message_filters
 from typing import Tuple
 from gym import spaces
 from collections import deque
 from sensor_msgs.msg import LaserScan
-from geometry_msgs.msg import Pose2D, PoseStamped, PoseWithCovarianceStamped
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
-from rosgraph_msgs.msg import Clock
 from nav_msgs.msg import Odometry
 from .geometry_utils import pose3D_to_pose2D, get_pose_difference, get_path_length
 
@@ -45,23 +42,23 @@ class Observer():
 
         # define subscribers
         # lidar scan
-        self._scan_sub = message_filters.Subscriber(f"{self.ns_prefix}scan", LaserScan, queue_size=5)
+        self._scan_sub = message_filters.Subscriber(f"{self.ns_prefix}scan", LaserScan, queue_size=1)
         self._scan_sub.registerCallback(self._scan_callback)
         
         # odometry
-        self._odom_sub = message_filters.Subscriber(f"{self.ns_prefix}odom", Odometry, queue_size=5)
+        self._odom_sub = message_filters.Subscriber(f"{self.ns_prefix}odom", Odometry, queue_size=1)
         self._odom_sub.registerCallback(self._odom_callback)
         
         # global goal
 
-        self._goal_sub = message_filters.Subscriber(f"{self.ns_prefix}{goal_topic}", PoseStamped, queue_size=5)
+        self._goal_sub = message_filters.Subscriber(f"{self.ns_prefix}{goal_topic}", PoseStamped, queue_size=1)
         self._goal_sub.registerCallback(self._goal_callback)
 
         if not train_mode:
-            self._subgoal_sub = message_filters.Subscriber(f"{self.ns_prefix}subgoal", PoseStamped, queue_size=5)
+            self._subgoal_sub = message_filters.Subscriber(f"{self.ns_prefix}subgoal", PoseStamped, queue_size=1)
             self._subgoal_sub.registerCallback(self._subgoal_callback)
 
-            self._globalplan_sub = message_filters.Subscriber(f"{self.ns_prefix}globalPlan", Path, queue_size=5)
+            self._globalplan_sub = message_filters.Subscriber(f"{self.ns_prefix}globalPlan", Path, queue_size=1)
             self._globalplan_sub.registerCallback(self._global_plan_callback)
 
     def _prepare_observation_space(self):

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-while getopts "n:c:e:" opt
+while getopts "n:c:e:p" opt
 do
     case "${opt}" in
         n ) num_env="$OPTARG" ;;
@@ -19,10 +19,11 @@ export PYTHONPATH=/geometry2_ws/devel/lib/python3/dist-packages:${PYTHONPATH}
 export PYTHONPATH=/catkin_ws/src/arena-rosnav:${PYTHONPATH}
 source catkin_ws/devel/setup.bash
 
-roslaunch arena_bringup start_training_2.launch train_mode:=true num_envs:=$num_env map_file:=random_map show_rviz:=false &>/dev/null &
+roslaunch arena_bringup start_training.launch train_mode:=true num_envs:=$num_env map_file:=random_map show_rviz:=false &>/dev/null &
 sleep 10
 
 roscd arena_combined_planner_drl/ 
+
 if [ -z ${eval_freq+x} ]; 
 then 
     echo "start training with eval frequency given in config file"

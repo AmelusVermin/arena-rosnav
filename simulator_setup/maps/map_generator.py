@@ -61,7 +61,7 @@ def make_image(map, ns: str):  # create PNG file from occupancy map (1:occupied,
     except:
         pass
     imgrgb.save(dir_path + "/{0}/{1}_{0}.png".format(map_name, ns))  # save map in map directory
-
+    print(dir_path + "/{0}/{1}_{0}.png".format(map_name, ns))
     create_empty_map(map.shape[0], map.shape[1], map_name, dir_path, ns)
 
 
