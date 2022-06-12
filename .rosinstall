@@ -52,7 +52,3 @@
 # - git:
 #     local-name: ../forks/localization
 #     uri: https://github.com/cra-ros-pkg/robot_localization.git
-
-- git:
-    local-name: ../forks/arena-evaluation
-    uri: https://github.com/ignc-research/arena-evaluation.git
