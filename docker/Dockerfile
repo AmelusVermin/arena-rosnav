@@ -130,5 +130,6 @@ RUN echo $'export PYTHONPATH=/geometry2_ws/devel/lib/python3/dist-packages:${PYT
 RUN echo $'export PYTHONPATH=/catkin_ws/src/arena-rosnav:${PYTHONPATH}\n' >> /root/.bashrc 
 RUN echo $'source /catkin_ws/devel/setup.bash\n' >> /root/.bashrc
 
+WORKDIR /catkin_ws/src/arena-rosnav/arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/
+COPY . .
 WORKDIR /catkin_ws/src/arena-rosnav/
-COPY . /arena_navigation/arena_local_planner/learning_based/arena_combined_planner_drl/
